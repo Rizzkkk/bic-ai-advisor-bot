@@ -4,6 +4,7 @@ import { MessageCircle, X, Minimize2, Send, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { OpenAIService, createSystemPrompt, type ChatMessage } from '@/utils/openaiService';
 
 interface Message {
   id: string;
@@ -17,7 +18,7 @@ interface BICChatbotProps {
   stripeKey?: string;
 }
 
-const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey, stripeKey }) => {
+const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -25,50 +26,9 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey, stripeKey }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showQuestions, setShowQuestions] = useState(true);
+  const [userApiKey, setUserApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const systemPrompt = `You are an AI assistant representing Bibhrajit Halder, founder of Bibhrajit Investment Corporation (BIC), a venture and advisory firm focused on early-stage AI, robotics, autonomy, and defense tech startups. You bring over two decades of experience in self-driving and autonomy, having led SafeAI as its founder and CEO, and now actively investing in and advising deeptech founders.
-
-Your tone is sharp, direct, clear, and founder-friendly. Avoid buzzwords. Avoid fluff. Speak like a battle-tested founder who knows what matters when building hard tech companies. You are not a motivational coach. You are a strategic execution partner.
-
-When users ask questions, respond with high signal, practical answers. Always give clear guidance like someone who has pitched, raised, hired, built, and exited. Do not be generic. Use real-world frameworks, crisp logic, and precise language. You're here to help founders win.
-
-COMPANY INFO:
-- BIC (Bibhrajit Investment Corporation) is an investment and advisory firm for early-stage deeptech startups — focused on AI, robotics, autonomy, and defense.
-- We help founders raise, build, and scale — and we partner hands-on through key stages like GTM, hiring, and M&A prep.
-
-SERVICES & PRICING:
-1. Pitch Deck Review & Redesign – $699
-   - Complete teardown and upgrade of pitch deck
-   - Strategic feedback on narrative, flow, and financials
-   - Updated slide structure + redesigned clean deck template
-   - 1-hour 1:1 working session
-
-2. Fundraising Sprint – $1,699
-   - Get investor-ready in 2 weeks
-   - 3 x 1:1 live working sessions (3 hrs total)
-   - Deep dive into storyline, metrics, valuation narrative
-   - Feedback on investor list + intros where aligned
-
-3. GTM Kickstart – $1,699
-   - Define first go-to-market motion, ICP, messaging
-   - 3 x 1:1 working sessions (3 hrs total)
-   - ICP + buyer persona definition
-   - Messaging teardown + sales narrative coaching
-
-RESPONSE FLOWS:
-- If someone asks how to pitch BIC: Direct them to contact info@bicorp.ai or use the contact form
-- If someone asks about services: List the productized services with pricing
-- If someone asks for custom support: Let them know we take on a few retainer clients per quarter
-- If unsure how to respond: "Great question — I'll have the team follow up. Want to leave your email?"
-
-GUARDRAILS:
-- Limit to startup/business topics only
-- Avoid legal/medical/personal advice
-- Never share private investor or client information
-- Set fallback: "Let me get back to you via email — leave your contact info."
-
-CONTACT: info@bicorp.ai`;
 
   const premadeQuestions = [
     "How do I pitch my AI startup to BIC?",
@@ -94,12 +54,24 @@ CONTACT: info@bicorp.ai`;
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!apiKey && isOpen && !showApiKeyInput) {
+      setShowApiKeyInput(true);
+    }
+  }, [apiKey, isOpen]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
+
+    const currentApiKey = apiKey || userApiKey;
+    if (!currentApiKey) {
+      setShowApiKeyInput(true);
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -115,12 +87,34 @@ CONTACT: info@bicorp.ai`;
     setShowQuestions(false);
 
     try {
-      // Simulate realistic response time
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-      
+      const openaiService = new OpenAIService({
+        apiKey: currentApiKey,
+        model: 'gpt-4o-mini',
+        temperature: 0.7,
+        maxTokens: 500
+      });
+
+      // Build conversation history for context
+      const chatMessages: ChatMessage[] = [
+        {
+          role: 'system',
+          content: createSystemPrompt()
+        },
+        ...messages.slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        {
+          role: 'user',
+          content: content.trim()
+        }
+      ];
+
+      const response = await openaiService.sendMessage(chatMessages);
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: generateBICResponse(content),
+        content: response,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -130,7 +124,7 @@ CONTACT: info@bicorp.ai`;
       console.error('Error sending message:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm having trouble connecting right now. Please reach out to our team at info@bicorp.ai and we'll get back to you quickly.",
+        content: "I'm having trouble connecting right now. Please check your API key or reach out to our team at info@bicorp.ai and we'll get back to you quickly.",
         role: 'assistant',
         timestamp: new Date()
       };
@@ -141,40 +135,6 @@ CONTACT: info@bicorp.ai`;
     }
   };
 
-  const generateBICResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('pitch') && (input.includes('bic') || input.includes('you'))) {
-      return "Want to pitch to BIC? Send your deck to info@bicorp.ai and we'll review it. We focus on AI, robotics, autonomy, and defense tech startups. For structured feedback, our Pitch Deck Review service ($699) gives you a complete teardown with actionable insights in 1 week. No fluff - just what needs to be fixed.";
-    }
-    
-    if (input.includes('service') || input.includes('help') || input.includes('advisory') || input.includes('offer')) {
-      return "Here's how we help founders win:\n\n**Pitch Deck Review & Redesign** - $699\nComplete deck teardown + 1-hour working session\n\n**Fundraising Sprint** - $1,699\nGet investor-ready in 2 weeks with 3 working sessions\n\n**GTM Kickstart** - $1,699\nDefine your go-to-market strategy with expert guidance\n\nAll include direct access to me. Which challenge are you facing right now?";
-    }
-    
-    if (input.includes('fundrais') || input.includes('series a') || input.includes('investor') || input.includes('round')) {
-      return "Fundraising is about three things: story, metrics, and timing. Most founders nail the tech but struggle translating it for investors. You need a clear commercial narrative, defensible moat, and credible GTM motion. Our Fundraising Sprint gets you investor-ready in 2 weeks - 3 working sessions covering storyline, valuation narrative, and investor strategy. Want specifics on your situation?";
-    }
-    
-    if (input.includes('gtm') || input.includes('go-to-market') || input.includes('customer') || input.includes('sales')) {
-      return "GTM for deeptech is different. You're not selling vitamins - you're solving real problems with complex tech. Start with ICP definition, then nail your messaging for technical buyers vs business buyers. Our GTM Kickstart covers exactly this - ICP definition, messaging teardown, and sales narrative coaching over 3 sessions. What's your target market?";
-    }
-    
-    if (input.includes('ai') || input.includes('robotics') || input.includes('autonomous') || input.includes('robot')) {
-      return "That's our sweet spot. After 20+ years in autonomy and AI, I've seen the evolution from perception → generative → agentic → physical AI. The winners translate breakthrough tech into commercial value quickly. Key is finding product-market fit before your runway runs out. What stage is your startup at and what's your biggest challenge right now?";
-    }
-
-    if (input.includes('good') && (input.includes('startup') || input.includes('robot'))) {
-      return "Good robotics startups have three things: 1) Clear commercial application (not just cool tech), 2) Defensible technology moat (IP, data, or unique insight), 3) Team that can execute both hardware and software. Most fail because they build solutions looking for problems. Start with a real customer pain point, then build the minimum viable robot to solve it. What problem are you solving?";
-    }
-    
-    if (input.includes('meeting') || input.includes('schedule') || input.includes('book') || input.includes('call')) {
-      return "Best way to get structured time with me is through our productized services - they include guaranteed 1:1 sessions with clear outcomes. For general inquiries, email info@bicorp.ai or use our contact form. What specific challenge do you need help with?";
-    }
-    
-    return "Good question! For specific guidance on that, reach out to our team at info@bicorp.ai. In the meantime, what's the biggest challenge you're facing with your startup that I can help with directly? Fundraising, GTM, or technical strategy?";
-  };
-
   const handleQuestionClick = (question: string) => {
     sendMessage(question);
   };
@@ -183,6 +143,12 @@ CONTACT: info@bicorp.ai`;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage(inputValue);
+    }
+  };
+
+  const handleApiKeySubmit = () => {
+    if (userApiKey.trim()) {
+      setShowApiKeyInput(false);
     }
   };
 
@@ -245,6 +211,30 @@ CONTACT: info@bicorp.ai`;
         {!isMinimized && (
           <>
             <div className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0">
+              {/* API Key Input */}
+              {showApiKeyInput && !apiKey && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <p className="text-sm font-medium text-blue-800">Enter your OpenAI API key to start chatting:</p>
+                  <Input
+                    type="password"
+                    value={userApiKey}
+                    onChange={(e) => setUserApiKey(e.target.value)}
+                    placeholder="sk-..."
+                    className="text-sm"
+                  />
+                  <Button
+                    onClick={handleApiKeySubmit}
+                    size="sm"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    Start Chat
+                  </Button>
+                  <p className="text-xs text-blue-600">
+                    Your API key is stored locally and never shared. Get one at openai.com
+                  </p>
+                </div>
+              )}
+
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -263,7 +253,7 @@ CONTACT: info@bicorp.ai`;
               ))}
               
               {/* Premade Questions */}
-              {showQuestions && messages.length <= 1 && (
+              {showQuestions && messages.length <= 1 && !showApiKeyInput && (
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 font-medium">Quick questions to get started:</p>
                   {premadeQuestions.map((question, index) => (
@@ -273,6 +263,7 @@ CONTACT: info@bicorp.ai`;
                       size="sm"
                       onClick={() => handleQuestionClick(question)}
                       className="w-full text-left justify-start text-sm h-auto py-2 px-3 border-[#0077FF]/20 text-[#0077FF] hover:bg-[#0077FF]/5"
+                      disabled={!apiKey && !userApiKey}
                     >
                       {question}
                     </Button>
@@ -304,11 +295,11 @@ CONTACT: info@bicorp.ai`;
                   onKeyPress={handleKeyPress}
                   placeholder="Ask about AI startups, funding, or strategy..."
                   className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
-                  disabled={isLoading}
+                  disabled={isLoading || (!apiKey && !userApiKey)}
                 />
                 <Button
                   onClick={() => sendMessage(inputValue)}
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={!inputValue.trim() || isLoading || (!apiKey && !userApiKey)}
                   className="bg-[#0077FF] hover:bg-[#0066CC] rounded-full w-9 h-9 p-0 flex-shrink-0"
                 >
                   {isLoading ? (
