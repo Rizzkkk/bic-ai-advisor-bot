@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minimize2, Send, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,12 +28,10 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showQuestions, setShowQuestions] = useState(true);
-  const [userApiKey, setUserApiKey] = useState('');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Use provided API key as default
+  // Use the provided API key as default
   const defaultApiKey = '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';
 
   const premadeQuestions = [
@@ -61,13 +58,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const currentApiKey = apiKey || defaultApiKey || userApiKey;
-    if (!currentApiKey && isOpen && !showApiKeyInput) {
-      setShowApiKeyInput(true);
-    }
-  }, [apiKey, isOpen, userApiKey]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -75,13 +65,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const detectResponseType = (content: string) => {
     const lowerContent = content.toLowerCase();
     
-    // Service triggers
     const serviceKeywords = [
       'pitch deck review', 'fundraising sprint', 'gtm kickstart',
       '$699', '$1,699', 'services', 'productized'
     ];
     
-    // Contact triggers
     const contactKeywords = [
       'info@bicorp.ai', 'contact form', 'send your deck',
       'email us', 'get in touch', 'reach out'
@@ -104,11 +92,8 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
-    const currentApiKey = apiKey || defaultApiKey || userApiKey;
-    if (!currentApiKey) {
-      setShowApiKeyInput(true);
-      return;
-    }
+    const currentApiKey = apiKey || defaultApiKey;
+    console.log('Starting message send with API key available:', !!currentApiKey);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -129,16 +114,17 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         apiKey: currentApiKey,
         model: 'gpt-4o',
         temperature: 0.7,
-        maxTokens: 500
+        maxTokens: 800
       });
 
-      // Build conversation history for context (last 15 messages for better context)
+      // Build conversation history (keep last 10 messages for context)
+      const recentMessages = messages.slice(-10);
       const chatMessages: ChatMessage[] = [
         {
           role: 'system',
           content: createSystemPrompt()
         },
-        ...messages.slice(-15).map(msg => ({
+        ...recentMessages.map(msg => ({
           role: msg.role,
           content: msg.content
         })),
@@ -148,12 +134,23 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         }
       ];
 
-      // Use streaming for better UX
+      console.log('Sending to OpenAI with', chatMessages.length, 'messages');
+
       let fullResponse = '';
+      let chunkCount = 0;
+
       await openaiService.sendMessageStream(chatMessages, (chunk: string) => {
+        chunkCount++;
         fullResponse += chunk;
         setStreamingMessage(fullResponse);
+        console.log('Received chunk', chunkCount, 'length:', chunk.length);
       });
+
+      console.log('Streaming complete. Total response length:', fullResponse.length);
+
+      if (!fullResponse.trim()) {
+        throw new Error('Empty response from AI');
+      }
 
       const responseType = detectResponseType(fullResponse);
 
@@ -168,8 +165,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
 
       setMessages(prev => [...prev, assistantMessage]);
       setStreamingMessage('');
+      console.log('Message successfully added to conversation');
+
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error in sendMessage:', error);
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: "I'm having trouble connecting right now. Please reach out directly to our team at info@bicorp.ai and we'll get back to you quickly.",
@@ -177,6 +177,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         timestamp: new Date(),
         showContactForm: true
       };
+      
       setMessages(prev => [...prev, errorMessage]);
       setStreamingMessage('');
     } finally {
@@ -186,6 +187,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   };
 
   const handleQuestionClick = (question: string) => {
+    console.log('Question clicked:', question);
     sendMessage(question);
   };
 
@@ -196,20 +198,12 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     }
   };
 
-  const handleApiKeySubmit = () => {
-    if (userApiKey.trim()) {
-      setShowApiKeyInput(false);
-    }
-  };
-
   const handleServiceSelect = (service: any) => {
     console.log('Service selected:', service.name);
-    // Service button already handles Stripe redirect
   };
 
   const handleContactSubmit = (data: any) => {
     console.log('Contact form submitted:', data);
-    // In production, this would send to info@bicorp.ai
   };
 
   const ChatBubble = () => (
@@ -228,7 +222,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
           alt="BIC" 
           className="w-8 h-8 object-contain"
           onError={(e) => {
-            // Fallback to icon if logo fails to load
             (e.target as HTMLElement).style.display = 'none';
             (e.target as HTMLElement).nextElementSibling?.classList.remove('hidden');
           }}
@@ -291,30 +284,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         {!isMinimized && (
           <>
             <div className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0">
-              {/* API Key Input */}
-              {showApiKeyInput && !apiKey && !defaultApiKey && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <p className="text-sm font-medium text-blue-800">Enter your OpenAI API key to start chatting:</p>
-                  <Input
-                    type="password"
-                    value={userApiKey}
-                    onChange={(e) => setUserApiKey(e.target.value)}
-                    placeholder="sk-..."
-                    className="text-sm"
-                  />
-                  <Button
-                    onClick={handleApiKeySubmit}
-                    size="sm"
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    Start Chat
-                  </Button>
-                  <p className="text-xs text-blue-600">
-                    Your API key is stored locally and never shared. Get one at openai.com
-                  </p>
-                </div>
-              )}
-
               {messages.map((message) => (
                 <div key={message.id}>
                   <div
@@ -331,14 +300,12 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                     </div>
                   </div>
 
-                  {/* Service Buttons */}
                   {message.showServices && (
                     <div className="mb-3">
                       <ServiceButtons onServiceSelect={handleServiceSelect} />
                     </div>
                   )}
 
-                  {/* Contact Form */}
                   {message.showContactForm && (
                     <div className="mb-3">
                       <ContactForm 
@@ -350,7 +317,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                 </div>
               ))}
               
-              {/* Streaming Message */}
               {streamingMessage && (
                 <div className="flex justify-start">
                   <div className="max-w-[85%] p-3 rounded-2xl rounded-bl-md bg-gray-100 text-gray-800 whitespace-pre-wrap">
@@ -360,8 +326,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                 </div>
               )}
               
-              {/* Premade Questions */}
-              {showQuestions && messages.length <= 1 && !showApiKeyInput && (
+              {showQuestions && messages.length <= 1 && (
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 font-medium">Quick questions to get started:</p>
                   {premadeQuestions.map((question, index) => (
@@ -371,7 +336,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                       size="sm"
                       onClick={() => handleQuestionClick(question)}
                       className="w-full text-left justify-start text-sm h-auto py-2 px-3 border-[#0077FF]/20 text-[#0077FF] hover:bg-[#0077FF]/5"
-                      disabled={!apiKey && !defaultApiKey && !userApiKey}
                     >
                       {question}
                     </Button>
@@ -379,7 +343,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                 </div>
               )}
               
-              {isTyping && (
+              {isTyping && !streamingMessage && (
                 <div className="flex justify-start">
                   <div className="bg-gray-100 p-3 rounded-2xl rounded-bl-md">
                     <div className="flex space-x-1">
@@ -403,11 +367,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                   onKeyPress={handleKeyPress}
                   placeholder="Ask about AI startups, funding, or strategy..."
                   className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
-                  disabled={isLoading || (!apiKey && !defaultApiKey && !userApiKey)}
+                  disabled={isLoading}
                 />
                 <Button
                   onClick={() => sendMessage(inputValue)}
-                  disabled={!inputValue.trim() || isLoading || (!apiKey && !defaultApiKey && !userApiKey)}
+                  disabled={!inputValue.trim() || isLoading}
                   className="bg-[#0077FF] hover:bg-[#0066CC] rounded-full w-9 h-9 p-0 flex-shrink-0"
                 >
                   {isLoading ? (

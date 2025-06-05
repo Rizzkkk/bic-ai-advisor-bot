@@ -1,4 +1,3 @@
-
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -21,11 +20,12 @@ export class OpenAIService {
     this.apiKey = config.apiKey;
     this.model = config.model || 'gpt-4o';
     this.temperature = config.temperature || 0.7;
-    this.maxTokens = config.maxTokens || 500;
+    this.maxTokens = config.maxTokens || 800;
   }
 
   async sendMessage(messages: ChatMessage[]): Promise<string> {
     try {
+      console.log('Sending non-streaming request to OpenAI');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -56,6 +56,8 @@ export class OpenAIService {
 
   async sendMessageStream(messages: ChatMessage[], onChunk: (chunk: string) => void): Promise<void> {
     try {
+      console.log('Starting streaming request to OpenAI');
+      
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -72,6 +74,7 @@ export class OpenAIService {
       });
 
       if (!response.ok) {
+        console.error('OpenAI API response not ok:', response.status);
         const errorData = await response.json().catch(() => ({}));
         throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
@@ -84,33 +87,47 @@ export class OpenAIService {
       const decoder = new TextDecoder();
       let buffer = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log('Stream reading completed');
+            break;
+          }
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') {
-              return;
-            }
-
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices[0]?.delta?.content;
-              if (content) {
-                onChunk(content);
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              
+              if (data === '[DONE]') {
+                console.log('Stream finished with [DONE]');
+                return;
               }
-            } catch (e) {
-              // Ignore parsing errors for incomplete chunks
+
+              if (data) {
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices[0]?.delta?.content;
+                  if (content) {
+                    onChunk(content);
+                  }
+                } catch (parseError) {
+                  console.log('Parse error for chunk:', data, parseError);
+                  // Continue processing other chunks
+                }
+              }
             }
           }
         }
+      } finally {
+        reader.releaseLock();
       }
+
     } catch (error) {
       console.error('OpenAI Streaming Error:', error);
       throw new Error('Failed to stream response from AI. Please try again later.');
