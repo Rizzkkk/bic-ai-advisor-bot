@@ -1,21 +1,26 @@
-MIT License
+Proprietary License
 
 Copyright (c) 2025 BIC (Bibhrajit Investment Corporation)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+All rights reserved.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This software and associated documentation files (the "Software") are the proprietary 
+property of BIC (Bibhrajit Investment Corporation). 
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+RESTRICTIONS:
+- This Software is licensed for internal use by BIC only
+- No part of this Software may be reproduced, distributed, or transmitted in any form
+- No derivative works may be created based on this Software
+- Commercial use outside of BIC operations is strictly prohibited
+- Reverse engineering, decompilation, or disassembly is prohibited
+
+PERMITTED USE:
+- Use within BIC business operations
+- Deployment on BIC-owned or BIC-contracted infrastructure
+- Modification for BIC's internal business purposes only
+
+This Software is provided "AS IS" without warranty of any kind. BIC disclaims all 
+warranties, express or implied, including but not limited to warranties of 
+merchantability, fitness for a particular purpose, and non-infringement.
+
+For licensing inquiries, contact: info@bicorp.ai
