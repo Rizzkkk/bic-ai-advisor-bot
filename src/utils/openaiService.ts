@@ -20,7 +20,7 @@ export class OpenAIService {
     this.apiKey = config.apiKey;
     this.model = config.model || 'gpt-4o';
     this.temperature = config.temperature || 0.7;
-    this.maxTokens = config.maxTokens || 800;
+    this.maxTokens = config.maxTokens || 4000;
   }
 
   async sendMessage(messages: ChatMessage[]): Promise<string> {
@@ -56,7 +56,7 @@ export class OpenAIService {
 
   async sendMessageStream(messages: ChatMessage[], onChunk: (chunk: string) => void): Promise<void> {
     try {
-      console.log('Starting streaming request to OpenAI');
+      console.log('Starting streaming request to OpenAI with max tokens:', this.maxTokens);
       
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -86,13 +86,14 @@ export class OpenAIService {
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let chunkCount = 0;
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           
           if (done) {
-            console.log('Stream reading completed');
+            console.log('Stream reading completed after', chunkCount, 'chunks');
             break;
           }
 
@@ -105,7 +106,7 @@ export class OpenAIService {
               const data = line.slice(6).trim();
               
               if (data === '[DONE]') {
-                console.log('Stream finished with [DONE]');
+                console.log('Stream finished with [DONE] after', chunkCount, 'chunks');
                 return;
               }
 
@@ -114,6 +115,7 @@ export class OpenAIService {
                   const parsed = JSON.parse(data);
                   const content = parsed.choices[0]?.delta?.content;
                   if (content) {
+                    chunkCount++;
                     onChunk(content);
                   }
                 } catch (parseError) {

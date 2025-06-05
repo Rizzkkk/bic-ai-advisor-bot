@@ -114,11 +114,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         apiKey: currentApiKey,
         model: 'gpt-4o',
         temperature: 0.7,
-        maxTokens: 800
+        maxTokens: 4000
       });
 
-      // Build conversation history (keep last 10 messages for context)
-      const recentMessages = messages.slice(-10);
+      // Build conversation history (keep last 15 messages for context)
+      const recentMessages = messages.slice(-15);
       const chatMessages: ChatMessage[] = [
         {
           role: 'system',
@@ -214,7 +214,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     >
       <Button
         onClick={() => setIsOpen(true)}
-        className="w-16 h-16 rounded-full bg-gradient-to-r from-[#0077FF] to-[#0066CC] hover:from-[#0066CC] hover:to-[#0055AA] shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse hover:animate-none hover:scale-105"
+        className="w-16 h-16 rounded-full bg-gradient-to-r from-[#0077FF] to-[#0066CC] hover:from-[#0066CC] hover:to-[#0055AA] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
         data-chat-bubble="true"
       >
         <img 
