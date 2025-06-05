@@ -233,7 +233,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For technical support or questions:
 - **Email**: info@bicorp.ai
-- **Documentation**: [docs.bicorp.ai](https://docs.bicorp.ai)
 - **Issues**: [GitHub Issues](https://github.com/your-username/bic-chatbot/issues)
 
 ## 🏗️ Roadmap
