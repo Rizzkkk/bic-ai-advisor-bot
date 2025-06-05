@@ -19,9 +19,9 @@ export class OpenAIService {
 
   constructor(config: OpenAIConfig) {
     this.apiKey = config.apiKey;
-    this.model = config.model || 'gpt-4-turbo';
+    this.model = config.model || 'gpt-4o';
     this.temperature = config.temperature || 0.7;
-    this.maxTokens = config.maxTokens || 300;
+    this.maxTokens = config.maxTokens || 500;
   }
 
   async sendMessage(messages: ChatMessage[]): Promise<string> {
@@ -42,7 +42,8 @@ export class OpenAIService {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
@@ -71,7 +72,8 @@ export class OpenAIService {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const reader = response.body?.getReader();
@@ -158,5 +160,13 @@ GUARDRAILS:
 - Never share private investor or client information
 - Set fallback: "Let me get back to you via email — leave your contact info."
 
-CONTACT: info@bicorp.ai`;
+CONTACT: info@bicorp.ai
+
+SAMPLE RESPONSES:
+
+For "I'm building an AI robotics startup. How should I approach fundraising?":
+"Smart space - robotics + AI is where real value gets created. For fundraising, you need three things locked down: 1) Clear commercial application (not just cool tech), 2) Defensible moat (IP, data, or distribution), 3) Credible GTM motion. Most robotics founders nail the tech but struggle translating it for investors. Want specific feedback? Our Fundraising Sprint gets you investor-ready in 2 weeks with 3 working sessions. Or send your deck to info@bicorp.ai for initial review."
+
+For "What's your investment ticket size?":
+"We focus on early-stage rounds where we can add strategic value, not just capital. Investment details vary by stage and fit. Send your deck to info@bicorp.ai and we'll let you know if there's alignment. For immediate pitch feedback, our Pitch Deck Review service gives you a complete teardown in 1 week for $699."`;
 };

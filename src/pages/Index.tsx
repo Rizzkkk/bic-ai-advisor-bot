@@ -13,8 +13,17 @@ const Index = () => {
         <div className="text-center mb-16">
           <div className="mb-8">
             <div className="inline-flex items-center space-x-3 bg-white rounded-full px-6 py-3 shadow-lg border border-gray-200">
-              <div className="w-10 h-10 bg-gradient-to-r from-[#0077FF] to-[#00E89D] rounded-full flex items-center justify-center">
-                <MessageCircle className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
+                <img 
+                  src="/bic-logo.png" 
+                  alt="BIC" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                    (e.target as HTMLElement).nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <MessageCircle className="w-6 h-6 text-[#0077FF] hidden" />
               </div>
               <span className="font-semibold text-gray-800">BIC AI Advisor</span>
             </div>
@@ -100,8 +109,7 @@ const Index = () => {
             <Button 
               className="bg-gradient-to-r from-[#0077FF] to-[#00E89D] hover:from-[#0066CC] hover:to-[#00CC88] text-white px-8 py-3 text-lg"
               onClick={() => {
-                // This would trigger the chat to open - handled by the chatbot component
-                const chatBubble = document.querySelector('[data-chat-bubble]') as HTMLElement;
+                const chatBubble = document.querySelector('[data-chat-bubble="true"]') as HTMLElement;
                 if (chatBubble) {
                   chatBubble.click();
                 }
