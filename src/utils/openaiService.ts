@@ -19,7 +19,7 @@ export class OpenAIService {
 
   constructor(config: OpenAIConfig) {
     this.apiKey = config.apiKey;
-    this.model = config.model || 'gpt-4o';
+    this.model = config.model || 'gpt-4.1-2025-04-14';
     this.temperature = config.temperature || 0.7;
     this.maxTokens = config.maxTokens || 4096;
   }
@@ -48,7 +48,9 @@ export class OpenAIService {
       }
 
       const data = await response.json();
-      return data.choices[0]?.message?.content || 'Sorry, I encountered an error. Please try again.';
+      const content = data.choices[0]?.message?.content || '';
+      console.log('Non-streaming response received, length:', content.length);
+      return content;
     } catch (error) {
       console.error('OpenAI API Error:', error);
       throw new Error('Failed to get response from AI. Please try again later.');
@@ -57,7 +59,7 @@ export class OpenAIService {
 
   async sendMessageStream(messages: ChatMessage[], onChunk: (chunk: string) => void): Promise<void> {
     try {
-      console.log('Starting streaming request with max tokens:', this.maxTokens);
+      console.log('Starting streaming request with model:', this.model, 'max tokens:', this.maxTokens);
       
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -76,8 +78,8 @@ export class OpenAIService {
 
       if (!response.ok) {
         console.error('OpenAI API response not ok:', response.status);
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
 
       const reader = response.body?.getReader();
@@ -88,13 +90,14 @@ export class OpenAIService {
       const decoder = new TextDecoder();
       let buffer = '';
       let chunkCount = 0;
+      let totalContent = '';
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           
           if (done) {
-            console.log('Stream completed after', chunkCount, 'chunks');
+            console.log('Stream completed after', chunkCount, 'chunks. Total content length:', totalContent.length);
             break;
           }
 
@@ -107,7 +110,7 @@ export class OpenAIService {
               const data = line.slice(6).trim();
               
               if (data === '[DONE]') {
-                console.log('Stream finished with [DONE]');
+                console.log('Stream finished with [DONE] signal');
                 return;
               }
 
@@ -117,16 +120,21 @@ export class OpenAIService {
                   const content = parsed.choices[0]?.delta?.content;
                   if (content) {
                     chunkCount++;
+                    totalContent += content;
                     onChunk(content);
+                    console.log('Chunk', chunkCount, 'processed, total length so far:', totalContent.length);
                   }
                 } catch (parseError) {
-                  console.log('Parse error for chunk:', parseError);
+                  console.log('Parse error for chunk:', parseError, 'data:', data);
                   // Continue processing other chunks
                 }
               }
             }
           }
         }
+
+        console.log('Streaming completed successfully. Final total length:', totalContent.length);
+
       } finally {
         reader.releaseLock();
       }
@@ -143,17 +151,19 @@ export const createSystemPrompt = (): string => {
 
 CRITICAL RESPONSE RULES:
 - Write in natural, conversational language like you're talking to a founder face-to-face
-- NO markdown formatting, NO asterisks, NO bold text, NO bullet points
+- NO markdown formatting, NO asterisks, NO bold text, NO bullet points, NO numbered lists
 - Speak like a battle-tested founder who knows what matters when building hard tech companies
 - Be sharp, direct, clear, and founder-friendly but conversational
 - Avoid buzzwords and fluff - give real-world, practical advice
 - Sound human, not like an AI assistant
+- Keep responses concise but valuable - aim for 2-4 paragraphs maximum
 
 Your tone is sharp but friendly, like talking to a fellow entrepreneur over coffee. You give high signal, practical answers with clear guidance from someone who has pitched, raised, hired, built, and exited. You are not a motivational coach - you are a strategic execution partner.
 
 COMPANY INFO:
 - BIC (Bibhrajit Investment Corporation) is an investment and advisory firm for early-stage deeptech startups focused on AI, robotics, autonomy, and defense
 - We help founders raise, build, and scale with hands-on partnership through key stages like GTM, hiring, and M&A prep
+- Based on 20+ years of experience building SafeAI (autonomous mining equipment) from zero to exit
 
 SERVICES & PRICING:
 1. Pitch Deck Review & Redesign - $699
@@ -167,17 +177,28 @@ SERVICES & PRICING:
 
 RESPONSE FLOWS:
 - If someone asks how to pitch BIC: Direct them to contact info@bicorp.ai or use the contact form
-- If someone asks about services: List the productized services with pricing
-- If someone asks for custom support: Let them know we take on a few retainer clients per quarter
+- If someone asks about services: List the productized services with pricing in natural language
+- If someone asks for custom support: Let them know we take on a few retainer clients per quarter for custom work
 - If unsure how to respond: "Great question - I'll have the team follow up. Want to leave your email?"
+
+SPECIFIC EXPERTISE AREAS:
+- AI/ML product development and commercialization
+- Robotics and autonomy go-to-market strategy
+- Enterprise sales for deep tech
+- Fundraising for hardware-software startups
+- Team building and technical hiring
+- Product-market fit for B2B robotics
+- Defense tech market entry
+- Manufacturing and operations scaling
 
 GUARDRAILS:
 - Limit to startup/business topics only
 - Avoid legal/medical/personal advice
 - Never share private investor or client information
 - Set fallback: "Let me get back to you via email - leave your contact info."
+- Don't give generic startup advice - focus on AI/robotics/autonomy specific challenges
 
 CONTACT: info@bicorp.ai
 
-Remember: Sound like a real person having a conversation, not an AI writing formatted text. No asterisks, no bold formatting, just natural speech.`;
+Remember: Sound like a real person having a conversation, not an AI writing formatted text. No formatting, just natural speech with real insights from building hard tech companies.`;
 };
