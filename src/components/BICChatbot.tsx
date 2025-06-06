@@ -34,7 +34,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [showQuestions, setShowQuestions] = useState(true);
   const [streamingMessage, setStreamingMessage] = useState('');
-  const [userHasScrolled, setUserHasScrolled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -48,25 +47,19 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     "How should I structure my Series A round?"
   ];
 
-  // Smart scrolling - only scroll if user is at bottom
+  // Simple auto-scroll only for new messages
   const scrollToBottom = useCallback(() => {
-    if (!userHasScrolled && messagesEndRef.current) {
+    if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [userHasScrolled]);
-
-  // Track user scroll behavior
-  const handleScroll = useCallback(() => {
-    if (messagesContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 100;
-      setUserHasScrolled(!isAtBottom);
     }
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingMessage, scrollToBottom]);
+    // Only scroll when we have new content and streaming is happening
+    if (streamingMessage || (messages.length > 0 && isLoading)) {
+      scrollToBottom();
+    }
+  }, [messages, streamingMessage, isLoading, scrollToBottom]);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -99,7 +92,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     setIsTyping(true);
     setShowQuestions(false);
     setStreamingMessage('');
-    setUserHasScrolled(false); // Reset scroll tracking for new response
 
     try {
       const openaiService = new OpenAIService({
@@ -177,21 +169,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     sendMessage(question);
   };
 
-  // Fixed input handler - no dependencies to avoid stopping behavior
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  }, []);
-
-  // Fixed key press handler - stable reference
-  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      const value = (e.target as HTMLInputElement).value;
-      if (value.trim() && !isLoading) {
-        sendMessage(value);
-      }
+  const handleSendClick = () => {
+    if (inputValue.trim() && !isLoading) {
+      sendMessage(inputValue);
     }
-  }, [isLoading]);
+  };
 
   const handleServiceSelect = (service: Service) => {
     console.log('Service selected:', service.name);
@@ -275,7 +257,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
           <>
             <div 
               ref={messagesContainerRef}
-              onScroll={handleScroll}
               className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0"
             >
               {messages.map((message) => (
@@ -340,13 +321,18 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
               <div className="flex space-x-2 mb-3">
                 <Input
                   value={inputValue}
-                  onChange={handleInputChange}
-                  onKeyPress={handleKeyPress}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendClick();
+                    }
+                  }}
                   placeholder="Ask about AI startups, funding, or strategy..."
                   className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
                 />
                 <Button
-                  onClick={() => sendMessage(inputValue)}
+                  onClick={handleSendClick}
                   disabled={!inputValue.trim() || isLoading}
                   className="bg-[#0077FF] hover:bg-[#0066CC] rounded-full w-9 h-9 p-0 flex-shrink-0"
                 >
