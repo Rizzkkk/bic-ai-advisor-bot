@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, Minimize2, Send, Loader } from 'lucide-react';
@@ -224,12 +223,13 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     </div>
   );
 
+  // Always render ChatWindow, only toggle visibility with CSS
+  const chatWindowClass = `fixed bottom-6 right-6 z-50 transition-all duration-500 ease-out ${
+    isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'
+  } ${isMinimized ? 'h-16' : 'h-[600px]'} w-96 max-w-[calc(100vw-2rem)] sm:max-w-96`;
+
   const ChatWindow = () => (
-    <div 
-      className={`fixed bottom-6 right-6 z-50 transition-all duration-500 ease-out ${
-        isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
-      } ${isMinimized ? 'h-16' : 'h-[600px]'} w-96 max-w-[calc(100vw-2rem)] sm:max-w-96`}
-    >
+    <div className={chatWindowClass}>
       <Card className="h-full bg-white shadow-2xl border-0 overflow-hidden rounded-2xl flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#0077FF] to-[#00E89D] p-4 text-white flex-shrink-0">
@@ -314,7 +314,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                       key={index}
                       onClick={() => handleQuestionClick(question)}
                       className="w-full text-left justify-start text-sm h-auto py-2 px-3 border-[#0077FF]/20 text-[#0077FF] hover:bg-[#0077FF]/5 bg-transparent"
-                      variant="outline"
                     >
                       {question}
                     </Button>

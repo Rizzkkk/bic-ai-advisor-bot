@@ -1,4 +1,3 @@
-
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -20,8 +19,8 @@ export class OpenAIService {
   constructor(config: OpenAIConfig) {
     this.apiKey = config.apiKey;
     this.model = config.model || 'gpt-4.1-2025-04-14';
-    this.temperature = config.temperature || 0.7;
-    this.maxTokens = config.maxTokens || 4096;
+    this.temperature = 0.4;
+    this.maxTokens = 200;
   }
 
   async sendMessage(messages: ChatMessage[]): Promise<string> {
@@ -38,7 +37,8 @@ export class OpenAIService {
           messages: messages,
           temperature: this.temperature,
           max_tokens: this.maxTokens,
-          stream: false,
+          stream: true,
+          stop: ['\n\n'],
         }),
       });
 
@@ -73,6 +73,7 @@ export class OpenAIService {
           temperature: this.temperature,
           max_tokens: this.maxTokens,
           stream: true,
+          stop: ['\n\n'],
         }),
       });
 
@@ -200,5 +201,7 @@ GUARDRAILS:
 
 CONTACT: info@bicorp.ai
 
-Remember: Sound like a real person having a conversation, not an AI writing formatted text. No formatting, just natural speech with real insights from building hard tech companies.`;
+Remember: Sound like a real person having a conversation, not an AI writing formatted text. No formatting, just natural speech with real insights from building hard tech companies.
+
+IMPORTANT: Keep your response under 70 words, 2-3 sentences maximum. Be direct, actionable, and do not add extra explanation or fluff. Respond in a conversational, ChatGPT-like style.`;
 };
