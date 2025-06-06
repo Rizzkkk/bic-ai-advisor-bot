@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, Minimize2, Send, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { OpenAIService, createSystemPrompt, type ChatMessage } from '@/utils/openaiService';
-import ServiceButtons from '@/components/ServiceButtons';
-import ContactForm from '@/components/ContactForm';
 
 interface Message {
   id: string;
@@ -13,7 +12,12 @@ interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   showServices?: boolean;
-  showContactForm?: boolean;
+}
+
+interface Service {
+  name: string;
+  description: string;
+  price: string;
 }
 
 interface BICChatbotProps {
@@ -44,7 +48,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingMessage]);
+  }, [messages, streamingMessage, isTyping]);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -56,37 +60,10 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
       };
       setMessages([welcomeMessage]);
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const detectResponseType = (content: string) => {
-    const lowerContent = content.toLowerCase();
-    
-    const serviceKeywords = [
-      'pitch deck review', 'fundraising sprint', 'gtm kickstart',
-      '$699', '$1,699', 'services', 'productized'
-    ];
-    
-    const contactKeywords = [
-      'info@bicorp.ai', 'contact form', 'send your deck',
-      'email us', 'get in touch', 'reach out'
-    ];
-    
-    const hasServiceKeywords = serviceKeywords.some(keyword => 
-      lowerContent.includes(keyword)
-    );
-    
-    const hasContactKeywords = contactKeywords.some(keyword => 
-      lowerContent.includes(keyword)
-    );
-    
-    return {
-      showServices: hasServiceKeywords,
-      showContactForm: hasContactKeywords
-    };
   };
 
   const sendMessage = async (content: string) => {
@@ -152,15 +129,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         throw new Error('Empty response from AI');
       }
 
-      const responseType = detectResponseType(fullResponse);
-
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: fullResponse,
         role: 'assistant',
         timestamp: new Date(),
-        showServices: responseType.showServices,
-        showContactForm: responseType.showContactForm
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -175,7 +148,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         content: "I'm having trouble connecting right now. Please reach out directly to our team at info@bicorp.ai and we'll get back to you quickly.",
         role: 'assistant',
         timestamp: new Date(),
-        showContactForm: true
       };
       
       setMessages(prev => [...prev, errorMessage]);
@@ -191,20 +163,26 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     sendMessage(question);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // Remove debounce and use direct input handler
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  // Optimized key press handler
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage(inputValue);
     }
-  };
+  }, [inputValue]);
 
-  const handleServiceSelect = (service: any) => {
+  const handleServiceSelect = (service: Service) => {
     console.log('Service selected:', service.name);
   };
 
-  const handleContactSubmit = (data: any) => {
-    console.log('Contact form submitted:', data);
-  };
+  // Only show ServiceButtons if the latest assistant message requests it
+  const lastAssistantMessage = messages.slice().reverse().find(m => m.role === 'assistant');
+  const showServices = lastAssistantMessage?.showServices;
 
   const ChatBubble = () => (
     <div 
@@ -261,18 +239,14 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
             </div>
             <div className="flex space-x-2">
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => setIsMinimized(!isMinimized)}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
               >
                 <Minimize2 className="w-4 h-4" />
               </Button>
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -299,24 +273,9 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                       {message.content}
                     </div>
                   </div>
-
-                  {message.showServices && (
-                    <div className="mb-3">
-                      <ServiceButtons onServiceSelect={handleServiceSelect} />
-                    </div>
-                  )}
-
-                  {message.showContactForm && (
-                    <div className="mb-3">
-                      <ContactForm 
-                        onSubmit={handleContactSubmit}
-                        initialMessage="I'd like to learn more about BIC's services."
-                      />
-                    </div>
-                  )}
                 </div>
               ))}
-              
+
               {streamingMessage && (
                 <div className="flex justify-start">
                   <div className="max-w-[85%] p-3 rounded-2xl rounded-bl-md bg-gray-100 text-gray-800 whitespace-pre-wrap">
@@ -332,10 +291,8 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                   {premadeQuestions.map((question, index) => (
                     <Button
                       key={index}
-                      variant="outline"
-                      size="sm"
                       onClick={() => handleQuestionClick(question)}
-                      className="w-full text-left justify-start text-sm h-auto py-2 px-3 border-[#0077FF]/20 text-[#0077FF] hover:bg-[#0077FF]/5"
+                      className="w-full text-left justify-start text-sm h-auto py-2 px-3 border-[#0077FF]/20 text-[#0077FF] hover:bg-[#0077FF]/5 bg-transparent"
                     >
                       {question}
                     </Button>
@@ -363,11 +320,10 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
               <div className="flex space-x-2 mb-3">
                 <Input
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask about AI startups, funding, or strategy..."
                   className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
-                  disabled={isLoading}
                 />
                 <Button
                   onClick={() => sendMessage(inputValue)}
