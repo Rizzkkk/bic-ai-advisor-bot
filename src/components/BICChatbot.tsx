@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, Minimize2, Send, Loader } from 'lucide-react';
@@ -33,9 +34,10 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [showQuestions, setShowQuestions] = useState(true);
   const [streamingMessage, setStreamingMessage] = useState('');
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Use the provided API key as default
   const defaultApiKey = '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';
 
   const premadeQuestions = [
@@ -46,9 +48,25 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     "How should I structure my Series A round?"
   ];
 
+  // Smart scrolling - only scroll if user is at bottom
+  const scrollToBottom = useCallback(() => {
+    if (!userHasScrolled && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [userHasScrolled]);
+
+  // Track user scroll behavior
+  const handleScroll = useCallback(() => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 100;
+      setUserHasScrolled(!isAtBottom);
+    }
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingMessage, isTyping]);
+  }, [messages, streamingMessage, scrollToBottom]);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -62,15 +80,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     }
   }, [isOpen, messages.length]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
     const currentApiKey = apiKey || defaultApiKey;
-    console.log('Starting message send with API key available:', !!currentApiKey);
+    console.log('Starting message send');
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -85,16 +99,16 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     setIsTyping(true);
     setShowQuestions(false);
     setStreamingMessage('');
+    setUserHasScrolled(false); // Reset scroll tracking for new response
 
     try {
       const openaiService = new OpenAIService({
         apiKey: currentApiKey,
         model: 'gpt-4o',
         temperature: 0.7,
-        maxTokens: 4000
+        maxTokens: 4096
       });
 
-      // Build conversation history (keep last 15 messages for context)
       const recentMessages = messages.slice(-15);
       const chatMessages: ChatMessage[] = [
         {
@@ -120,7 +134,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         chunkCount++;
         fullResponse += chunk;
         setStreamingMessage(fullResponse);
-        console.log('Received chunk', chunkCount, 'length:', chunk.length);
+        console.log('Received chunk', chunkCount);
       });
 
       console.log('Streaming complete. Total response length:', fullResponse.length);
@@ -138,7 +152,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
 
       setMessages(prev => [...prev, assistantMessage]);
       setStreamingMessage('');
-      console.log('Message successfully added to conversation');
+      console.log('Message successfully added');
 
     } catch (error) {
       console.error('Error in sendMessage:', error);
@@ -163,24 +177,26 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     sendMessage(question);
   };
 
-  // Remove debounce and use direct input handler
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fixed input handler - no dependencies to avoid stopping behavior
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
-  };
+  }, []);
 
-  // Optimized key press handler
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+  // Fixed key press handler - stable reference
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage(inputValue);
+      const value = (e.target as HTMLInputElement).value;
+      if (value.trim() && !isLoading) {
+        sendMessage(value);
+      }
     }
-  }, [inputValue]);
+  }, [isLoading]);
 
   const handleServiceSelect = (service: Service) => {
     console.log('Service selected:', service.name);
   };
 
-  // Only show ServiceButtons if the latest assistant message requests it
   const lastAssistantMessage = messages.slice().reverse().find(m => m.role === 'assistant');
   const showServices = lastAssistantMessage?.showServices;
 
@@ -257,7 +273,11 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         {/* Messages Container */}
         {!isMinimized && (
           <>
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0">
+            <div 
+              ref={messagesContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0"
+            >
               {messages.map((message) => (
                 <div key={message.id}>
                   <div
