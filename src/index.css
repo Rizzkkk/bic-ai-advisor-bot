@@ -11,7 +11,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: transparent;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -102,19 +102,14 @@
     @apply border-border;
   }
 
-  /* Remove white background and make transparent */
-  html, body {
+  /* Make all container backgrounds transparent */
+  html, body, #root, .app, .main-container {
     background: transparent !important;
     margin: 0;
     padding: 0;
-    width: 100%;
     height: 100%;
+    width: 100%;
     overflow: hidden;
-  }
-
-  /* Make main containers transparent */
-  #root, .app {
-    background: transparent !important;
   }
 
   /* Chat widget specific styles */
@@ -125,22 +120,20 @@
     position: relative;
   }
 
-  /* Style the chat container with a proper background */
+  /* Style the chat window with glass effect */
   .chat-window {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 350px;
+    max-height: 500px;
+    margin: auto;
+    position: relative;
   }
 
-  /* Alternative gradient background */
-  .chat-window-alt {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-
+  /* Chat bubble styling */
   .chat-bubble {
     @apply bg-gradient-to-r from-[#0077FF] to-[#0066CC];
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);

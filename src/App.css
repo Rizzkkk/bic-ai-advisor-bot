@@ -48,3 +48,45 @@
 .read-the-docs {
   color: #888;
 }
+
+.app {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.app.embedded {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+/* Ensure the chat widget container is properly sized */
+.chat-widget-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: transparent;
+}
+
+/* Style the chat window with glass effect */
+.chat-window {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 350px;
+  max-height: 500px;
+  margin: auto;
+  position: relative;
+}
+
+/* Ensure proper sizing in iframe */
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+}
