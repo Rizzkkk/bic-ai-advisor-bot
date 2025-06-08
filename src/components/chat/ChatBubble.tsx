@@ -35,7 +35,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ isOpen, onOpen }) => {
     >
       <Button
         onClick={onOpen}
-        className="w-16 h-16 rounded-full bg-gradient-to-r from-[#0077FF] to-[#0066CC] hover:from-[#0066CC] hover:to-[#0055AA] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+        className="chat-bubble w-16 h-16 rounded-full hover:scale-105 transition-all duration-300"
       >
         {/* BIC Logo with fallback to MessageCircle icon */}
         <img 
