@@ -1,7 +1,8 @@
 /**
- * ChatBubble Component
- * A floating button that opens the chat window when clicked.
- * Displays the BIC logo and falls back to a message icon if the logo fails to load.
+ * Chat Bubble Component
+ * This component represents the floating chat bubble button that toggles the visibility
+ * of the main chat window. It typically appears minimized on the screen until clicked,
+ * providing a discreet way for users to access the chatbot interface.
  */
 
 import React from 'react';

@@ -1,7 +1,8 @@
 /**
- * ChatInput Component
- * Handles user message input and submission in the chat interface.
- * Includes input field, send button, and loading states.
+ * Chat Input Component
+ * This component provides the input field where users can type their messages.
+ * It typically includes a text area and a send button.
+ * It handles capturing user input, managing the input state, and triggering the `sendMessage` action.
  */
 
 import React, { useRef } from 'react';

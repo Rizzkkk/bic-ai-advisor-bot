@@ -1,7 +1,8 @@
 /**
- * ChatMessages Component
- * Displays the chat conversation history, streaming messages, and suggested questions.
- * Handles auto-scrolling behavior and typing indicators.
+ * Chat Messages Component
+ * This component is responsible for rendering the list of messages in the chat window.
+ * It displays both user and AI-generated messages, handles streaming updates for AI responses,
+ * and ensures the chat scrolls to the latest message for a continuous conversation flow.
  */
 
 import React, { useRef, useEffect, useCallback } from 'react';

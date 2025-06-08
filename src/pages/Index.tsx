@@ -1,7 +1,8 @@
 /**
  * Index Page Component
- * The main landing page of the application.
- * Renders the BIC Chatbot interface as the primary content.
+ * This component serves as the main landing page of the application.
+ * Its primary role is to render the `BICChatbot` interface,
+ * making it the central feature visible to users upon visiting the application's root URL.
  */
 
 import * as React from 'react';

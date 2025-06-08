@@ -1,3 +1,10 @@
+/**
+ * Contact Form Component
+ * This component provides a form for users to submit contact information or inquiries.
+ * It typically includes fields for name, email, subject, and message.
+ * The component handles form input, validation, and submission logic,
+ * likely interacting with a backend service to send the form data.
+ */
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';

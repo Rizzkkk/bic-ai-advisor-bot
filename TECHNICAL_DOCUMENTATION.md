@@ -1,4 +1,22 @@
-# BIC AI Advisor Bot - Technical Documentation
+# Technical Documentation
+
+## Overview
+The BIC AI Advisor Bot is built using React and integrates with OpenAI's API to provide real-time AI-powered responses. The application is designed to be scalable, secure, and user-friendly.
+
+## Architecture
+- **Frontend**: React with TypeScript
+- **Backend**: Node.js with Express
+- **Database**: MongoDB
+- **AI Integration**: OpenAI API
+
+## Features
+- Real-time chat interface
+- AI-powered responses
+- Secure API key management
+- Responsive design
+
+## Contact
+For technical support, please contact info@bicorp.ai.
 
 ## Project Structure
 

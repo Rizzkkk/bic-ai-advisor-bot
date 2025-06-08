@@ -1,7 +1,9 @@
 /**
  * Main Application Component
- * Sets up the core application structure with routing, state management,
- * and global UI providers.
+ * This file serves as the root component of the entire application.
+ * It sets up global providers such as React Query for data management,
+ * TooltipProvider for UI tooltips, and toast notification systems.
+ * It also configures React Router for navigation within the single-page application.
  */
 
 import { Toaster } from "@/components/ui/toaster";

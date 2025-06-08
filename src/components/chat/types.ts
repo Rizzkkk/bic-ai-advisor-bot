@@ -1,4 +1,11 @@
 /**
+ * Type Definitions for Chat Components
+ * This file contains TypeScript interface and type definitions used across the chatbot's UI components.
+ * It ensures type safety and consistency for data structures like chat messages, component props,
+ * and other related data, facilitating better code organization and maintainability.
+ */
+
+/**
  * Represents a chat message in the conversation
  * @interface Message
  */

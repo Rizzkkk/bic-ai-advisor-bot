@@ -1,9 +1,10 @@
-
 /**
  * BICChatbot Component
- * The main chatbot interface component that manages the chat state,
- * handles message sending/receiving, and orchestrates the chat UI components.
- * Now uses Supabase Edge Functions for secure API communication.
+ * This is the main component that orchestrates the entire chatbot user interface and its core functionalities.
+ * It manages the chatbot's state, including whether it's open, minimized, the conversation history,
+ * and loading/typing indicators. This component handles user input, sends messages to the AI service
+ * via Supabase Edge Functions, and displays the streamed responses in real-time.
+ * It integrates various chat-related sub-components to form the complete chatbot experience.
  */
 
 import React, { useState, useEffect } from 'react';

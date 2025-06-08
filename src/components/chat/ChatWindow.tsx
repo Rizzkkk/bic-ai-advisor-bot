@@ -1,8 +1,8 @@
 /**
- * ChatWindow Component
- * The main container component that orchestrates the chat interface.
- * Manages the layout and state of the chat window, including minimized state
- * and visibility of child components.
+ * Chat Window Component
+ * This component represents the main interface of the chatbot, containing the conversation display,
+ * message input area, and control buttons (minimize/close).
+ * It orchestrates the layout and interaction of various chat-related sub-components.
  */
 
 import React from 'react';

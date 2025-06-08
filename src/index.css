@@ -1,3 +1,10 @@
+/*
+ * Global Stylesheet
+ * This file contains global CSS rules that apply across the entire application.
+ * It defines fundamental styles for elements like body, typography, and any other
+ * base styles inherited by components.
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

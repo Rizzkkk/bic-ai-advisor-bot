@@ -1,8 +1,11 @@
-
 /**
  * OpenAI Service Implementation
- * Handles communication with OpenAI's API through Supabase Edge Functions.
- * Supports both streaming and non-streaming responses.
+ * This service class is responsible for all communication with the OpenAI API,
+ * specifically designed to route requests through a Supabase Edge Function.
+ * This architecture ensures that the OpenAI API key remains secure on the server-side
+ * and is never exposed in the client-side code. It supports both streaming
+ * and non-streaming responses from OpenAI, providing real-time chat capabilities.
+ * It also defines the system prompt to guide the AI's persona and response style.
  */
 
 import { supabase } from "@/integrations/supabase/client";

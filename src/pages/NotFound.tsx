@@ -1,7 +1,8 @@
 /**
- * NotFound Page Component
- * 404 error page displayed when users attempt to access non-existent routes.
- * Includes error logging and a link to return to the home page.
+ * Not Found Page Component
+ * This component is rendered when a user navigates to a URL that does not match
+ * any defined routes in the application. It provides a user-friendly 404 error message
+ * and typically offers navigation options back to the main parts of the application.
  */
 
 import { useLocation } from "react-router-dom";

@@ -1,4 +1,12 @@
 /**
+ * Stripe Service Integration
+ * This service handles interactions with the Stripe API for payment processing.
+ * It likely contains functions for creating payment intents, managing subscriptions,
+ * or handling other e-commerce related operations, securely communicating with
+ * Stripe through a backend or serverless function to protect API keys.
+ */
+
+/**
  * Stripe Service Implementation
  * Handles payment processing and checkout functionality for BIC services.
  * Manages service configurations and Stripe checkout sessions.

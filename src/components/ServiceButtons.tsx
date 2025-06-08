@@ -1,3 +1,9 @@
+/**
+ * Service Buttons Component
+ * This component renders a set of interactive buttons, likely representing different services or actions.
+ * It is designed to provide quick access to specific features or initiate particular workflows within the application.
+ * Each button's functionality and appearance would be configured through its props.
+ */
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
