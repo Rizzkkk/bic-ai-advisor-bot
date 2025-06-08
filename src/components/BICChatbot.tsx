@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, Minimize2, Send, Loader } from 'lucide-react';
@@ -21,14 +22,16 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showQuestions, setShowQuestions] = useState(true);
   const [streamingMessage, setStreamingMessage] = useState('');
+  
+  // Use refs to prevent re-renders on input changes
+  const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const userScrolledRef = useRef(false);
 
   const defaultApiKey = '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';
 
@@ -40,24 +43,26 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     "How should I structure my Series A round?"
   ];
 
-  // Smart scrolling - only when user hasn't manually scrolled
-  const scrollToBottom = useCallback(() => {
-    if (messagesEndRef.current && messagesContainerRef.current) {
+  // Track user scroll behavior
+  const handleScroll = useCallback(() => {
+    if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
-      
-      if (isNearBottom) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+      userScrolledRef.current = !isAtBottom;
     }
   }, []);
 
-  // Only scroll for new streaming content
-  useEffect(() => {
-    if (streamingMessage) {
-      scrollToBottom();
+  // Only auto-scroll if user hasn't manually scrolled up
+  const scrollToBottom = useCallback(() => {
+    if (!userScrolledRef.current && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [streamingMessage, scrollToBottom]);
+  }, []);
+
+  // Scroll for new messages and streaming
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, streamingMessage, scrollToBottom]);
 
   // Initialize welcome message
   useEffect(() => {
@@ -85,24 +90,28 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
       timestamp: new Date()
     };
 
-    // Add user message and reset input immediately
+    // Add user message immediately
     setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
     setIsLoading(true);
     setIsTyping(true);
     setShowQuestions(false);
     setStreamingMessage('');
+
+    // Clear input immediately
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
 
     try {
       const openaiService = new OpenAIService({
         apiKey: currentApiKey,
         model: 'gpt-4.1-2025-04-14',
         temperature: 0.7,
-        maxTokens: 4096
+        maxTokens: 1000
       });
 
       // Build conversation history
-      const recentMessages = messages.slice(-10); // Keep last 10 messages for context
+      const recentMessages = messages.slice(-8);
       const chatMessages: ChatMessage[] = [
         {
           role: 'system',
@@ -121,38 +130,27 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
       console.log('Sending to OpenAI with', chatMessages.length, 'messages');
 
       let fullResponse = '';
-      let hasStartedStreaming = false;
 
       await openaiService.sendMessageStream(chatMessages, (chunk: string) => {
-        hasStartedStreaming = true;
         fullResponse += chunk;
         setStreamingMessage(fullResponse);
-        console.log('Streaming chunk received, total length:', fullResponse.length);
       });
 
-      console.log('Streaming completed. Final response length:', fullResponse.length);
+      console.log('Streaming completed. Final response:', fullResponse);
 
-      // Always save the final response, even if streaming didn't work
-      if (!fullResponse.trim() && !hasStartedStreaming) {
-        console.log('No streaming response, trying fallback non-streaming request');
-        fullResponse = await openaiService.sendMessage(chatMessages);
+      // Create final assistant message
+      if (fullResponse.trim()) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: fullResponse.trim(),
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        throw new Error('No response received');
       }
-
-      if (!fullResponse.trim()) {
-        throw new Error('Empty response from AI');
-      }
-
-      // Create and save assistant message
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: fullResponse,
-        role: 'assistant',
-        timestamp: new Date(),
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-      setStreamingMessage('');
-      console.log('Assistant message successfully saved');
 
     } catch (error) {
       console.error('Error in sendMessage:', error);
@@ -165,32 +163,28 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
       };
       
       setMessages(prev => [...prev, errorMessage]);
-      setStreamingMessage('');
     } finally {
       setIsLoading(false);
       setIsTyping(false);
+      setStreamingMessage('');
     }
   };
 
   const handleQuestionClick = (question: string) => {
-    console.log('Question clicked:', question);
     sendMessage(question);
   };
 
-  // Simple send handler without complex state dependencies
+  // Use uncontrolled input with ref
   const handleSend = () => {
-    const value = inputValue.trim();
-    if (value && !isLoading) {
-      sendMessage(value);
+    if (inputRef.current && !isLoading) {
+      const value = inputRef.current.value.trim();
+      if (value) {
+        sendMessage(value);
+      }
     }
   };
 
-  // Simple input change handler
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  // Simple key handler
+  // Simple key handler without state dependencies
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
@@ -207,7 +201,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
       <Button
         onClick={() => setIsOpen(true)}
         className="w-16 h-16 rounded-full bg-gradient-to-r from-[#0077FF] to-[#0066CC] hover:from-[#0066CC] hover:to-[#0055AA] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-        data-chat-bubble="true"
       >
         <img 
           src="/bic-logo.png" 
@@ -223,7 +216,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     </div>
   );
 
-  // Always render ChatWindow, only toggle visibility with CSS
   const chatWindowClass = `fixed bottom-6 right-6 z-50 transition-all duration-500 ease-out ${
     isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'
   } ${isMinimized ? 'h-16' : 'h-[600px]'} w-96 max-w-[calc(100vw-2rem)] sm:max-w-96`;
@@ -274,8 +266,8 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
           <>
             <div 
               ref={messagesContainerRef}
+              onScroll={handleScroll}
               className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0"
-              style={{ scrollBehavior: 'smooth' }}
             >
               {messages.map((message) => (
                 <div key={message.id}>
@@ -342,8 +334,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
               <div className="flex space-x-2 mb-3">
                 <Input
                   ref={inputRef}
-                  value={inputValue}
-                  onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about AI startups, funding, or strategy..."
                   className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
@@ -351,7 +341,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
                 />
                 <Button
                   onClick={handleSend}
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={isLoading}
                   className="bg-[#0077FF] hover:bg-[#0066CC] rounded-full w-9 h-9 p-0 flex-shrink-0"
                 >
                   {isLoading ? (
