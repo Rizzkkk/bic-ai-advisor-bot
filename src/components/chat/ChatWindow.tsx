@@ -61,8 +61,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onQuestionClick
 }) => {
   // Dynamic class names for chat window positioning and animations
-  const chatWindowClass = `fixed bottom-6 right-6 z-50 transition-all duration-500 ease-out ${
-    isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'
+  const chatWindowClass = `fixed bottom-6 right-0 z-50 transition-all duration-500 ease-out ${
+    isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none hidden'
   } ${isMinimized ? 'h-16' : 'h-[600px]'} w-96 max-w-[calc(100vw-2rem)] sm:max-w-96`;
 
   return (

@@ -153,19 +153,21 @@ const BICChatbot: React.FC<BICChatbotProps> = () => {
         onOpen={() => setIsOpen(true)}
       />
       {/* Main chat window */}
-      <ChatWindow
-        isOpen={isOpen}
-        isMinimized={isMinimized}
-        messages={messages}
-        streamingMessage={streamingMessage}
-        isLoading={isLoading}
-        isTyping={isTyping}
-        showQuestions={showQuestions}
-        onMinimize={() => setIsMinimized(!isMinimized)}
-        onClose={() => setIsOpen(false)}
-        onSendMessage={sendMessage}
-        onQuestionClick={handleQuestionClick}
-      />
+      {isOpen && (
+        <ChatWindow
+          isOpen={isOpen}
+          isMinimized={isMinimized}
+          messages={messages}
+          streamingMessage={streamingMessage}
+          isLoading={isLoading}
+          isTyping={isTyping}
+          showQuestions={showQuestions}
+          onMinimize={() => setIsMinimized(!isMinimized)}
+          onClose={() => setIsOpen(false)}
+          onSendMessage={sendMessage}
+          onQuestionClick={handleQuestionClick}
+        />
+      )}
     </>
   );
 };
