@@ -95,3 +95,6 @@ For any inquiries, technical support, or further assistance, please contact us a
 
 ---
 _This README provides a high-level overview. For in-depth technical details, architecture, and advanced troubleshooting, please consult `documentation.md`._
+
+
+‪‪❤︎‬ BIC Team
