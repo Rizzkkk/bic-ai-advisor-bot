@@ -19,7 +19,6 @@ export default defineConfig(({ mode }) => ({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         iframeEntry: path.resolve(__dirname, 'src/iframeEntry.tsx'),
-        iframe: path.resolve(__dirname, 'iframe.html'),
       },
       output: {
         entryFileNames: 'assets/[name].js',
