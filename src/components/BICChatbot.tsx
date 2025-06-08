@@ -28,7 +28,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const [streamingMessage, setStreamingMessage] = useState('');
 
   // Default API key for OpenAI service
-  const defaultApiKey = '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';
+  const defaultApiKey = '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';
 
   /**
    * Effect to show welcome message when chat is first opened
