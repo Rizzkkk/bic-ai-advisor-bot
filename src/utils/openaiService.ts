@@ -93,11 +93,11 @@ export class OpenAIService {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/chat-completion`, {
+      const response = await fetch(`https://oxvzrchcfzmaoftronkm.supabase.co/functions/v1/chat-completion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94dnpyY2hjZnptYW9mdHJvbmttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNTA5OTAsImV4cCI6MjA2NDkyNjk5MH0.Yn4tOEWm4H5ZLNsEGAp_Q3JyP0RaaMoHnfRRX0R5vOs`,
           ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
