@@ -67,7 +67,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <div className={chatWindowClass}>
-      <Card className="h-full chat-window overflow-hidden flex flex-col">
+      <Card removeBackground={true} className="h-full chat-window overflow-hidden flex flex-col">
         {/* Chat header with minimize/close controls */}
         <ChatHeader
           isMinimized={isMinimized}

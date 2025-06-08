@@ -13,7 +13,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import { useState, useEffect } from 'react';
 import ChatApplication from './ChatApplication';
 import './App.css';
 
@@ -30,43 +29,24 @@ const queryClient = new QueryClient();
  * 
  * @returns {JSX.Element} The root application component
  */
-const App = () => {
-  const [isEmbedded, setIsEmbedded] = useState(false);
-
-  useEffect(() => {
-    // Check if we're in an iframe or have the embedded parameter
-    const isInIframe = window.self !== window.top;
-    const hasEmbeddedParam = new URLSearchParams(window.location.search).get('embedded') === 'true';
-    setIsEmbedded(isInIframe || hasEmbeddedParam);
-
-    // Apply iframe-specific styles
-    if (isInIframe || hasEmbeddedParam) {
-      document.body.style.background = 'transparent';
-      document.documentElement.style.background = 'transparent';
-    }
-  }, []);
-
-  return (
-    <div className={`app ${isEmbedded ? 'embedded' : ''}`}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          {/* Global toast notifications */}
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Main landing page */}
-              <Route path="/" element={<Index />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              {/* 404 page for unmatched routes */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      {/* Global toast notifications */}
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          {/* Main landing page */}
+          <Route path="/" element={<Index />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* 404 page for unmatched routes */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
       <ChatApplication />
-    </div>
-  );
-};
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

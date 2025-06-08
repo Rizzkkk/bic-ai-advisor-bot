@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
-        widget: path.resolve(__dirname, 'src/widget.tsx'),
+        iframeEntry: path.resolve(__dirname, 'src/iframeEntry.tsx'),
       },
       output: {
         entryFileNames: 'assets/[name].js',
