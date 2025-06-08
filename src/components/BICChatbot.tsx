@@ -1,8 +1,9 @@
+
 /**
  * BICChatbot Component
  * The main chatbot interface component that manages the chat state,
  * handles message sending/receiving, and orchestrates the chat UI components.
- * Integrates with OpenAI's API for AI-powered responses.
+ * Now uses Supabase Edge Functions for secure API communication.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -13,11 +14,11 @@ import { Message, BICChatbotProps } from './chat/types';
 
 /**
  * BICChatbot Component
- * Main component that manages the chat interface and AI interactions
- * @param {BICChatbotProps} props - Component props including optional API key
+ * Main component that manages the chat interface and AI interactions through Supabase
+ * @param {BICChatbotProps} props - Component props (apiKey is no longer used)
  * @returns {JSX.Element} The complete chat interface
  */
-const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
+const BICChatbot: React.FC<BICChatbotProps> = () => {
   // State management for chat interface
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -26,9 +27,6 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [showQuestions, setShowQuestions] = useState(true);
   const [streamingMessage, setStreamingMessage] = useState('');
-
-  // Default API key for OpenAI service
-  const defaultApiKey = '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';
 
   /**
    * Effect to show welcome message when chat is first opened
@@ -46,13 +44,12 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
   }, [isOpen, messages.length]);
 
   /**
-   * Handles sending messages to the AI service and managing the chat state
+   * Handles sending messages to the AI service through Supabase Edge Functions
    * @param {string} content - The message content to send
    */
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
-    const currentApiKey = apiKey || defaultApiKey;
     console.log('Starting message send with content:', content);
 
     // Create and add user message to chat
@@ -70,9 +67,8 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
     setStreamingMessage('');
 
     try {
-      // Initialize OpenAI service
+      // Initialize OpenAI service (no API key needed, using Supabase)
       const openaiService = new OpenAIService({
-        apiKey: currentApiKey,
         model: 'gpt-4.1-2025-04-14',
         temperature: 0.7,
         maxTokens: 1000
@@ -95,7 +91,7 @@ const BICChatbot: React.FC<BICChatbotProps> = ({ apiKey }) => {
         }
       ];
 
-      console.log('Sending to OpenAI with', chatMessages.length, 'messages');
+      console.log('Sending to OpenAI through Supabase with', chatMessages.length, 'messages');
 
       // Stream the AI response
       let fullResponse = '';

@@ -1,8 +1,11 @@
+
 /**
  * OpenAI Service Implementation
- * Handles communication with OpenAI's API for chat completions.
+ * Handles communication with OpenAI's API through Supabase Edge Functions.
  * Supports both streaming and non-streaming responses.
  */
+
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Represents a message in the chat conversation
@@ -20,8 +23,6 @@ export interface ChatMessage {
  * @interface OpenAIConfig
  */
 export interface OpenAIConfig {
-  /** OpenAI API key for authentication */
-  apiKey: string;
   /** Model to use for completions (defaults to gpt-4.1-2025-04-14) */
   model?: string;
   /** Temperature setting for response generation (0-1) */
@@ -31,11 +32,10 @@ export interface OpenAIConfig {
 }
 
 /**
- * Service class for interacting with OpenAI's API
+ * Service class for interacting with OpenAI's API through Supabase Edge Functions
  * Handles message sending, streaming, and response processing
  */
 export class OpenAIService {
-  private apiKey: string;
   private model: string;
   private temperature: number;
   private maxTokens: number;
@@ -44,46 +44,36 @@ export class OpenAIService {
    * Creates a new instance of OpenAIService
    * @param {OpenAIConfig} config - Configuration options
    */
-  constructor(config: OpenAIConfig) {
-    this.apiKey = config.apiKey;
+  constructor(config: OpenAIConfig = {}) {
     this.model = config.model || 'gpt-4.1-2025-04-14';
-    this.temperature = 0.4;
-    this.maxTokens = 200;
+    this.temperature = config.temperature || 0.4;
+    this.maxTokens = config.maxTokens || 200;
   }
 
   /**
-   * Sends a non-streaming message to OpenAI API
+   * Sends a non-streaming message to OpenAI API through Supabase Edge Function
    * @param {ChatMessage[]} messages - Array of chat messages
    * @returns {Promise<string>} The complete response
    */
   async sendMessage(messages: ChatMessage[]): Promise<string> {
     try {
-      console.log('Sending non-streaming request to OpenAI');
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: this.model,
+      console.log('Sending non-streaming request through Supabase Edge Function');
+      
+      const { data, error } = await supabase.functions.invoke('chat-completion', {
+        body: {
           messages: messages,
+          model: this.model,
           temperature: this.temperature,
-          max_tokens: this.maxTokens,
-          stream: true,
-          stop: ['\n\n'],
-        }),
+          maxTokens: this.maxTokens,
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      if (error) {
+        throw new Error(`Supabase function error: ${error.message}`);
       }
 
-      const data = await response.json();
-      const content = data.choices[0]?.message?.content || '';
-      console.log('Non-streaming response received, length:', content.length);
-      return content;
+      console.log('Non-streaming response received');
+      return data?.content || '';
     } catch (error) {
       console.error('OpenAI API Error:', error);
       throw new Error('Failed to get response from AI. Please try again later.');
@@ -91,35 +81,37 @@ export class OpenAIService {
   }
 
   /**
-   * Sends a streaming message to OpenAI API
+   * Sends a streaming message to OpenAI API through Supabase Edge Function
    * @param {ChatMessage[]} messages - Array of chat messages
    * @param {Function} onChunk - Callback function for each chunk of the response
    * @returns {Promise<void>}
    */
   async sendMessageStream(messages: ChatMessage[], onChunk: (chunk: string) => void): Promise<void> {
     try {
-      console.log('Starting streaming request with model:', this.model, 'max tokens:', this.maxTokens);
+      console.log('Starting streaming request through Supabase Edge Function with model:', this.model);
       
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/chat-completion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
-          model: this.model,
           messages: messages,
+          model: this.model,
           temperature: this.temperature,
-          max_tokens: this.maxTokens,
-          stream: true,
-          stop: ['\n\n'],
+          maxTokens: this.maxTokens,
         }),
       });
 
       if (!response.ok) {
-        console.error('OpenAI API response not ok:', response.status);
+        console.error('Supabase function response not ok:', response.status);
         const errorText = await response.text().catch(() => 'Unknown error');
-        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+        throw new Error(`Supabase function error: ${response.status} - ${errorText}`);
       }
 
       const reader = response.body?.getReader();
