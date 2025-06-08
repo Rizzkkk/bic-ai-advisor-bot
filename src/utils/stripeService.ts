@@ -1,23 +1,52 @@
+/**
+ * Stripe Service Implementation
+ * Handles payment processing and checkout functionality for BIC services.
+ * Manages service configurations and Stripe checkout sessions.
+ */
 
+/**
+ * Configuration options for the Stripe service
+ * @interface StripeConfig
+ */
 export interface StripeConfig {
+  /** Stripe publishable key for client-side operations */
   publishableKey: string;
 }
 
+/**
+ * Represents a service that can be purchased
+ * @interface ServicePayment
+ */
 export interface ServicePayment {
+  /** Name of the service */
   name: string;
+  /** Price in cents (e.g., 69900 for $699.00) */
   price: number;
+  /** Stripe price ID for the service */
   priceId?: string;
+  /** Description of the service */
   description: string;
 }
 
+/**
+ * Service class for handling Stripe payment operations
+ * Manages service configurations and checkout processes
+ */
 export class StripeService {
   private publishableKey: string;
 
+  /**
+   * Creates a new instance of StripeService
+   * @param {StripeConfig} config - Configuration options
+   */
   constructor(config: StripeConfig) {
     this.publishableKey = config.publishableKey;
   }
 
-  // Service configurations for BIC
+  /**
+   * Service configurations for BIC offerings
+   * Each service includes name, price, and description
+   */
   private services: Record<string, ServicePayment> = {
     'pitch-deck-review': {
       name: 'Pitch Deck Review & Redesign',
@@ -39,6 +68,12 @@ export class StripeService {
     }
   };
 
+  /**
+   * Creates a Stripe checkout session for a service
+   * @param {string} serviceKey - Key of the service to purchase
+   * @param {string} [customerEmail] - Optional customer email
+   * @returns {Promise<string>} Checkout session URL
+   */
   async createCheckoutSession(serviceKey: string, customerEmail?: string): Promise<string> {
     const service = this.services[serviceKey];
     if (!service) {
@@ -62,6 +97,12 @@ export class StripeService {
     return checkoutUrl;
   }
 
+  /**
+   * Redirects the user to the Stripe checkout page
+   * @param {string} serviceKey - Key of the service to purchase
+   * @param {string} [customerEmail] - Optional customer email
+   * @returns {Promise<void>}
+   */
   async redirectToCheckout(serviceKey: string, customerEmail?: string): Promise<void> {
     try {
       const checkoutUrl = await this.createCheckoutSession(serviceKey, customerEmail);
@@ -74,25 +115,46 @@ export class StripeService {
     }
   }
 
+  /**
+   * Retrieves information about a specific service
+   * @param {string} serviceKey - Key of the service
+   * @returns {ServicePayment | null} Service information or null if not found
+   */
   getServiceInfo(serviceKey: string): ServicePayment | null {
     return this.services[serviceKey] || null;
   }
 
+  /**
+   * Formats a price in cents to a display string
+   * @param {number} priceInCents - Price in cents
+   * @returns {string} Formatted price string (e.g., "$699.00")
+   */
   formatPrice(priceInCents: number): string {
     return `$${(priceInCents / 100).toLocaleString()}`;
   }
 
+  /**
+   * Retrieves all available services
+   * @returns {Record<string, ServicePayment>} Object containing all services
+   */
   getAllServices(): Record<string, ServicePayment> {
     return { ...this.services };
   }
 }
 
-// Helper function to create Stripe service instance
+/**
+ * Helper function to create a Stripe service instance
+ * @param {string} publishableKey - Stripe publishable key
+ * @returns {StripeService} New Stripe service instance
+ */
 export const createStripeService = (publishableKey: string): StripeService => {
   return new StripeService({ publishableKey });
 };
 
-// Default service for demo purposes
+/**
+ * Default Stripe service instance for demo purposes
+ * Note: Replace with actual publishable key in production
+ */
 export const defaultStripeService = new StripeService({
   publishableKey: 'pk_test_demo_key' // Replace with actual publishable key
 });

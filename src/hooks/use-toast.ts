@@ -5,9 +5,12 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
+// Maximum number of toasts to show at once
 const TOAST_LIMIT = 1
+// Delay before removing a toast (in milliseconds)
 const TOAST_REMOVE_DELAY = 1000000
 
+// Toast type with additional properties
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
@@ -15,6 +18,7 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
+// Action types for toast state management
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
@@ -22,8 +26,10 @@ const actionTypes = {
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
 
+// Counter for generating unique toast IDs
 let count = 0
 
+// Generate a unique ID for each toast
 function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER
   return count.toString()
@@ -31,6 +37,7 @@ function genId() {
 
 type ActionType = typeof actionTypes
 
+// Action types for toast state management
 type Action =
   | {
       type: ActionType["ADD_TOAST"]
@@ -49,12 +56,15 @@ type Action =
       toastId?: ToasterToast["id"]
     }
 
+// State interface for toast management
 interface State {
   toasts: ToasterToast[]
 }
 
+// Map to store toast removal timeouts
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
+// Add a toast to the removal queue
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
@@ -71,6 +81,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+// Reducer for managing toast state
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -126,10 +137,13 @@ export const reducer = (state: State, action: Action): State => {
   }
 }
 
+// Array of state change listeners
 const listeners: Array<(state: State) => void> = []
 
+// In-memory state for toasts
 let memoryState: State = { toasts: [] }
 
+// Dispatch function for state updates
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
@@ -137,8 +151,10 @@ function dispatch(action: Action) {
   })
 }
 
+// Toast type without ID
 type Toast = Omit<ToasterToast, "id">
 
+// Function to create and show a toast
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -168,6 +184,7 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// Hook for managing toasts
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 

@@ -1,21 +1,49 @@
+/**
+ * OpenAI Service Implementation
+ * Handles communication with OpenAI's API for chat completions.
+ * Supports both streaming and non-streaming responses.
+ */
+
+/**
+ * Represents a message in the chat conversation
+ * @interface ChatMessage
+ */
 export interface ChatMessage {
+  /** Role of the message sender (user, assistant, or system) */
   role: 'user' | 'assistant' | 'system';
+  /** Content of the message */
   content: string;
 }
 
+/**
+ * Configuration options for the OpenAI service
+ * @interface OpenAIConfig
+ */
 export interface OpenAIConfig {
+  /** OpenAI API key for authentication */
   apiKey: string;
+  /** Model to use for completions (defaults to gpt-4.1-2025-04-14) */
   model?: string;
+  /** Temperature setting for response generation (0-1) */
   temperature?: number;
+  /** Maximum number of tokens in the response */
   maxTokens?: number;
 }
 
+/**
+ * Service class for interacting with OpenAI's API
+ * Handles message sending, streaming, and response processing
+ */
 export class OpenAIService {
   private apiKey: string;
   private model: string;
   private temperature: number;
   private maxTokens: number;
 
+  /**
+   * Creates a new instance of OpenAIService
+   * @param {OpenAIConfig} config - Configuration options
+   */
   constructor(config: OpenAIConfig) {
     this.apiKey = config.apiKey;
     this.model = config.model || 'gpt-4.1-2025-04-14';
@@ -23,6 +51,11 @@ export class OpenAIService {
     this.maxTokens = 200;
   }
 
+  /**
+   * Sends a non-streaming message to OpenAI API
+   * @param {ChatMessage[]} messages - Array of chat messages
+   * @returns {Promise<string>} The complete response
+   */
   async sendMessage(messages: ChatMessage[]): Promise<string> {
     try {
       console.log('Sending non-streaming request to OpenAI');
@@ -57,6 +90,12 @@ export class OpenAIService {
     }
   }
 
+  /**
+   * Sends a streaming message to OpenAI API
+   * @param {ChatMessage[]} messages - Array of chat messages
+   * @param {Function} onChunk - Callback function for each chunk of the response
+   * @returns {Promise<void>}
+   */
   async sendMessageStream(messages: ChatMessage[], onChunk: (chunk: string) => void): Promise<void> {
     try {
       console.log('Starting streaming request with model:', this.model, 'max tokens:', this.maxTokens);
@@ -102,6 +141,7 @@ export class OpenAIService {
             break;
           }
 
+          // Process the stream chunks
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
@@ -147,6 +187,11 @@ export class OpenAIService {
   }
 }
 
+/**
+ * Creates the system prompt for the AI assistant
+ * Defines the personality, expertise, and response guidelines
+ * @returns {string} The system prompt
+ */
 export const createSystemPrompt = (): string => {
   return `You are Bibhrajit Halder, founder of Bibhrajit Investment Corporation (BIC), a venture and advisory firm focused on early-stage AI, robotics, autonomy, and defense tech startups. You have over two decades of experience in self-driving and autonomy, having led SafeAI as its founder and CEO, and now actively investing in and advising deeptech founders.
 

@@ -1,16 +1,36 @@
+/**
+ * ChatMessages Component
+ * Displays the chat conversation history, streaming messages, and suggested questions.
+ * Handles auto-scrolling behavior and typing indicators.
+ */
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Message } from './types';
 
+/**
+ * Props interface for the ChatMessages component
+ * @interface ChatMessagesProps
+ */
 interface ChatMessagesProps {
+  /** Array of chat messages to display */
   messages: Message[];
+  /** Currently streaming message content */
   streamingMessage: string;
+  /** Indicates if the assistant is currently typing */
   isTyping: boolean;
+  /** Controls visibility of suggested questions */
   showQuestions: boolean;
+  /** Callback function when a suggested question is clicked */
   onQuestionClick: (question: string) => void;
 }
 
+/**
+ * ChatMessages Component
+ * Renders the chat message history with support for streaming messages and suggested questions
+ * @param {ChatMessagesProps} props - Component props
+ * @returns {JSX.Element} The chat messages component
+ */
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   messages,
   streamingMessage,
@@ -18,10 +38,15 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   showQuestions,
   onQuestionClick
 }) => {
+  // Refs for scroll management
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const userScrolledRef = useRef(false);
 
+  /**
+   * Predefined questions to help users get started
+   * @type {string[]}
+   */
   const premadeQuestions = [
     "How do I pitch my AI startup to BIC?",
     "What services do you offer for fundraising?", 
@@ -30,6 +55,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     "How should I structure my Series A round?"
   ];
 
+  /**
+   * Handles scroll events to detect if user has manually scrolled
+   * Updates userScrolledRef to prevent auto-scrolling if user is reading previous messages
+   */
   const handleScroll = useCallback(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
@@ -38,12 +67,17 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     }
   }, []);
 
+  /**
+   * Scrolls to the bottom of the messages container
+   * Only scrolls if user hasn't manually scrolled up
+   */
   const scrollToBottom = useCallback(() => {
     if (!userScrolledRef.current && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
 
+  // Auto-scroll when new messages arrive or streaming message updates
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage, scrollToBottom]);
@@ -54,6 +88,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       onScroll={handleScroll}
       className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0"
     >
+      {/* Render chat message history */}
       {messages.map((message) => (
         <div key={message.id}>
           <div
@@ -72,6 +107,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
       ))}
 
+      {/* Display streaming message with typing indicator */}
       {streamingMessage && (
         <div className="flex justify-start">
           <div className="max-w-[85%] p-3 rounded-2xl rounded-bl-md bg-gray-100 text-gray-800 whitespace-pre-wrap">
@@ -81,6 +117,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
       )}
       
+      {/* Show suggested questions for new conversations */}
       {showQuestions && messages.length <= 1 && (
         <div className="space-y-2">
           <p className="text-sm text-gray-600 font-medium">Quick questions to get started:</p>
@@ -96,6 +133,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
       )}
       
+      {/* Display typing indicator when assistant is typing */}
       {isTyping && !streamingMessage && (
         <div className="flex justify-start">
           <div className="bg-gray-100 p-3 rounded-2xl rounded-bl-md">
@@ -108,6 +146,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
       )}
       
+      {/* Invisible element for scroll management */}
       <div ref={messagesEndRef} />
     </div>
   );

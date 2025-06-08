@@ -1,17 +1,39 @@
+/**
+ * ChatInput Component
+ * Handles user message input and submission in the chat interface.
+ * Includes input field, send button, and loading states.
+ */
 
 import React, { useRef } from 'react';
 import { Send, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+/**
+ * Props interface for the ChatInput component
+ * @interface ChatInputProps
+ */
 interface ChatInputProps {
+  /** Indicates whether a message is currently being processed */
   isLoading: boolean;
+  /** Callback function to handle sending a new message */
   onSendMessage: (message: string) => void;
 }
 
+/**
+ * ChatInput Component
+ * Renders the input section of the chat interface with message input and send button
+ * @param {ChatInputProps} props - Component props
+ * @returns {JSX.Element} The chat input component
+ */
 const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
+  // Reference to the input element for direct manipulation
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * Handles sending a message when the send button is clicked
+   * Clears the input field after sending
+   */
   const handleSend = () => {
     if (inputRef.current && !isLoading) {
       const value = inputRef.current.value.trim();
@@ -22,6 +44,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
     }
   };
 
+  /**
+   * Handles keyboard events for the input field
+   * Sends message on Enter key press (without Shift)
+   * @param {React.KeyboardEvent<HTMLInputElement>} e - Keyboard event
+   */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
@@ -31,6 +58,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
 
   return (
     <div className="p-4 border-t bg-gray-50 flex-shrink-0">
+      {/* Input field and send button container */}
       <div className="flex space-x-2 mb-3">
         <Input
           ref={inputRef}
@@ -44,6 +72,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
           disabled={isLoading}
           className="bg-[#0077FF] hover:bg-[#0066CC] rounded-full w-9 h-9 p-0 flex-shrink-0"
         >
+          {/* Show loading spinner or send icon based on state */}
           {isLoading ? (
             <Loader className="w-4 h-4 animate-spin" />
           ) : (
@@ -51,6 +80,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
           )}
         </Button>
       </div>
+      {/* Footer text with contact information */}
       <p className="text-xs text-gray-500 text-center">
         Powered by BIC AI • info@bicorp.ai
       </p>

@@ -1,13 +1,30 @@
+/**
+ * ChatBubble Component
+ * A floating button that opens the chat window when clicked.
+ * Displays the BIC logo and falls back to a message icon if the logo fails to load.
+ */
 
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+/**
+ * Props interface for the ChatBubble component
+ * @interface ChatBubbleProps
+ */
 interface ChatBubbleProps {
+  /** Controls whether the chat window is currently open */
   isOpen: boolean;
+  /** Callback function to handle opening the chat window */
   onOpen: () => void;
 }
 
+/**
+ * ChatBubble Component
+ * Renders a floating circular button with the BIC logo that opens the chat window
+ * @param {ChatBubbleProps} props - Component props
+ * @returns {JSX.Element} A floating button component
+ */
 const ChatBubble: React.FC<ChatBubbleProps> = ({ isOpen, onOpen }) => {
   return (
     <div 
@@ -19,11 +36,13 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ isOpen, onOpen }) => {
         onClick={onOpen}
         className="w-16 h-16 rounded-full bg-gradient-to-r from-[#0077FF] to-[#0066CC] hover:from-[#0066CC] hover:to-[#0055AA] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
       >
+        {/* BIC Logo with fallback to MessageCircle icon */}
         <img 
           src="/bic-logo.png" 
           alt="BIC" 
           className="w-8 h-8 object-contain"
           onError={(e) => {
+            // Hide the image and show the fallback icon if image fails to load
             (e.target as HTMLElement).style.display = 'none';
             (e.target as HTMLElement).nextElementSibling?.classList.remove('hidden');
           }}
