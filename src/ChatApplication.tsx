@@ -9,17 +9,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { OpenAIService, createSystemPrompt, type ChatMessage } from '@/utils/openaiService';
-import ChatBubble from './chat/ChatBubble';
-import ChatWindow from './chat/ChatWindow';
-import { Message, BICChatbotProps } from './chat/types';
+import ChatBubble from './components/chat/ChatBubble';
+import ChatWindow from './components/chat/ChatWindow';
+import { Message, BICChatbotProps } from './components/chat/types';
 
 /**
- * BICChatbot Component
+ * ChatApplication Component
  * Main component that manages the chat interface and AI interactions through Supabase
  * @param {BICChatbotProps} props - Component props (apiKey is no longer used)
  * @returns {JSX.Element} The complete chat interface
  */
-const BICChatbot: React.FC<BICChatbotProps> = () => {
+const ChatApplication: React.FC<BICChatbotProps> = () => {
   // State management for chat interface
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -172,4 +172,4 @@ const BICChatbot: React.FC<BICChatbotProps> = () => {
   );
 };
 
-export default BICChatbot;
+export default ChatApplication;

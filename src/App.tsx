@@ -14,7 +14,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { useState, useEffect } from 'react';
-import BICChatbot from './components/BICChatbot';
+import ChatApplication from './ChatApplication';
 import './App.css';
 
 // Initialize React Query client for data fetching and caching
@@ -64,7 +64,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-      <BICChatbot />
+      <ChatApplication />
     </div>
   );
 };
