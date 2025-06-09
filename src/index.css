@@ -127,31 +127,35 @@
 
   /* Style the chat window with glass effect */
   .chat-window {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    max-width: 350px;
-    max-height: 500px;
-    margin: auto;
-    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Embedded mode overrides */
+  .embedded-chat-window {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* Chat bubble styling */
   .chat-bubble {
     @apply bg-gradient-to-r from-[#0077FF] to-[#0066CC];
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Embedded mode specific styles */
-  .embedded-mode {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: none !important;
-    max-height: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
   }
 }

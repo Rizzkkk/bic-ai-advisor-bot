@@ -66,14 +66,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   // Dynamic class names for chat window positioning and animations
   const chatWindowClass = isEmbedded 
-    ? "h-full w-full" 
+    ? "h-full w-full embedded-chat-window" 
     : `fixed bottom-6 right-0 z-50 transition-all duration-500 ease-out ${
         isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none hidden'
       } ${isMinimized ? 'h-16' : 'h-[500px]'} w-[350px] max-w-[calc(100vw-2rem)] sm:max-w-[350px]`;
 
   return (
     <div className={chatWindowClass}>
-      <Card removeBackground={true} className="h-full chat-window overflow-hidden flex flex-col">
+      <Card 
+        removeBackground={true} 
+        className={`h-full overflow-hidden flex flex-col ${isEmbedded ? 'embedded-chat-window' : 'chat-window'}`}
+      >
         {/* Chat header with minimize/close controls */}
         <ChatHeader
           isMinimized={isMinimized}
