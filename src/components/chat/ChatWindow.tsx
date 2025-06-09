@@ -40,6 +40,8 @@ interface ChatWindowProps {
   onSendMessage: (message: string) => void;
   /** Callback function when a suggested question is clicked */
   onQuestionClick: (question: string) => void;
+  /** Callback function when header is clicked */
+  onHeaderClick?: () => void;
   /** Whether the widget is in embedded mode */
   isEmbedded?: boolean;
 }
@@ -62,11 +64,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onClose,
   onSendMessage,
   onQuestionClick,
+  onHeaderClick,
   isEmbedded = false
 }) => {
   // Dynamic class names for chat window positioning and animations
   const chatWindowClass = isEmbedded 
-    ? "h-full w-full embedded-chat-window" 
+    ? "h-full w-full" 
     : `fixed bottom-6 right-0 z-50 transition-all duration-500 ease-out ${
         isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none hidden'
       } ${isMinimized ? 'h-16' : 'h-[500px]'} w-[350px] max-w-[calc(100vw-2rem)] sm:max-w-[350px]`;
@@ -80,8 +83,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         {/* Chat header with minimize/close controls */}
         <ChatHeader
           isMinimized={isMinimized}
-          onMinimize={() => onMinimize()}
+          onMinimize={onMinimize}
           onClose={onClose}
+          onHeaderClick={onHeaderClick}
           isEmbedded={isEmbedded}
         />
 
