@@ -1,3 +1,4 @@
+
 /*
  * Global Stylesheet
  * This file contains global CSS rules that apply across the entire application.
@@ -109,6 +110,10 @@
     padding: 0;
     height: 100%;
     width: 100%;
+  }
+
+  /* Prevent overflow issues in embedded mode */
+  body {
     overflow: hidden;
   }
 
@@ -137,5 +142,16 @@
   .chat-bubble {
     @apply bg-gradient-to-r from-[#0077FF] to-[#0066CC];
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Embedded mode specific styles */
+  .embedded-mode {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 }

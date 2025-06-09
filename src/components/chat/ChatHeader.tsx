@@ -1,3 +1,4 @@
+
 /**
  * ChatHeader Component
  * The header section of the chat window containing the BIC logo, title,
@@ -19,6 +20,8 @@ interface ChatHeaderProps {
   onMinimize: () => void;
   /** Callback function to handle closing the chat window */
   onClose: () => void;
+  /** Whether the widget is in embedded mode */
+  isEmbedded?: boolean;
 }
 
 /**
@@ -27,7 +30,7 @@ interface ChatHeaderProps {
  * @param {ChatHeaderProps} props - Component props
  * @returns {JSX.Element} The chat window header component
  */
-const ChatHeader: React.FC<ChatHeaderProps> = ({ isMinimized, onMinimize, onClose }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ isMinimized, onMinimize, onClose, isEmbedded = false }) => {
   return (
     <div className="bg-gradient-to-r from-[#0077FF] to-[#00E89D] p-4 text-white flex-shrink-0">
       <div className="flex items-center justify-between">
@@ -55,12 +58,16 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isMinimized, onMinimize, onClos
         </div>
         {/* Right section with control buttons */}
         <div className="flex space-x-2">
-          <Button
-            onClick={onMinimize}
-            className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
-          >
-            <Minimize2 className="w-4 h-4" />
-          </Button>
+          {/* Show minimize button only in non-embedded mode */}
+          {!isEmbedded && (
+            <Button
+              onClick={onMinimize}
+              className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
+            >
+              <Minimize2 className="w-4 h-4" />
+            </Button>
+          )}
+          {/* In embedded mode, close button minimizes instead of closing */}
           <Button
             onClick={onClose}
             className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"

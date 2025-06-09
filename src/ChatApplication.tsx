@@ -28,6 +28,34 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [showQuestions, setShowQuestions] = useState(true);
   const [streamingMessage, setStreamingMessage] = useState('');
+  const [isEmbedded, setIsEmbedded] = useState(false);
+
+  /**
+   * Effect to check if we're in embedded mode and handle initial state
+   */
+  useEffect(() => {
+    // Check if we're in an iframe or have the embedded parameter
+    const isInIframe = window.self !== window.top;
+    const hasEmbeddedParam = new URLSearchParams(window.location.search).get('embedded') === 'true';
+    const embedded = isInIframe || hasEmbeddedParam;
+    
+    setIsEmbedded(embedded);
+    
+    // In embedded mode, start with chat open
+    if (embedded) {
+      setIsOpen(true);
+    }
+
+    // Apply iframe-specific styles
+    if (embedded) {
+      document.body.style.background = 'transparent';
+      document.documentElement.style.background = 'transparent';
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.height = '100%';
+      document.body.style.width = '100%';
+    }
+  }, []);
 
   /**
    * Effect to show welcome message when chat is first opened
@@ -146,12 +174,15 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   };
 
   return (
-    <>
-      {/* Floating chat bubble button */}
-      <ChatBubble 
-        isOpen={isOpen}
-        onOpen={() => setIsOpen(true)}
-      />
+    <div className={isEmbedded ? "h-full w-full" : ""}>
+      {/* Only show floating chat bubble in non-embedded mode */}
+      {!isEmbedded && (
+        <ChatBubble 
+          isOpen={isOpen}
+          onOpen={() => setIsOpen(true)}
+        />
+      )}
+      
       {/* Main chat window */}
       {isOpen && (
         <ChatWindow
@@ -163,12 +194,13 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
           isTyping={isTyping}
           showQuestions={showQuestions}
           onMinimize={() => setIsMinimized(!isMinimized)}
-          onClose={() => setIsOpen(false)}
+          onClose={() => isEmbedded ? setIsMinimized(true) : setIsOpen(false)}
           onSendMessage={sendMessage}
           onQuestionClick={handleQuestionClick}
+          isEmbedded={isEmbedded}
         />
       )}
-    </>
+    </div>
   );
 };
 
