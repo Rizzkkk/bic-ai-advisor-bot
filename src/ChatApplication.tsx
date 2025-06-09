@@ -41,10 +41,10 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     
     setIsEmbedded(embedded);
     
-    // In embedded mode, start with chat open and not minimized
+    // In embedded mode, start closed and minimized
     if (embedded) {
-      setIsOpen(true);
-      setIsMinimized(false);
+      setIsOpen(false);
+      setIsMinimized(true);
     }
 
     // Apply iframe-specific styles
@@ -176,46 +176,49 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   };
 
   /**
-   * Handle minimize/expand toggle for embedded mode
+   * Handle opening the chat widget
    */
-  const handleToggleMinimized = () => {
-    setIsMinimized(!isMinimized);
+  const handleOpenChat = () => {
+    setIsOpen(true);
+    setIsMinimized(false);
   };
 
   /**
-   * Handle header click when minimized in embedded mode
+   * Handle closing the chat widget
    */
-  const handleHeaderClick = () => {
-    if (isEmbedded && isMinimized) {
-      setIsMinimized(false);
+  const handleCloseChat = () => {
+    if (isEmbedded) {
+      setIsOpen(false);
+      setIsMinimized(true);
+    } else {
+      setIsOpen(false);
     }
   };
 
   return (
     <div className={isEmbedded ? "h-full w-full overflow-hidden" : ""}>
-      {/* Only show floating chat bubble in non-embedded mode */}
-      {!isEmbedded && (
+      {/* Chat bubble - show in both modes when chat is closed */}
+      {(!isOpen || !isEmbedded) && (
         <ChatBubble 
           isOpen={isOpen}
-          onOpen={() => setIsOpen(true)}
+          onOpen={handleOpenChat}
         />
       )}
       
-      {/* Main chat window - always show in embedded mode */}
-      {(isOpen || isEmbedded) && (
+      {/* Main chat window - only show when open */}
+      {isOpen && (
         <ChatWindow
-          isOpen={isOpen || isEmbedded}
-          isMinimized={isMinimized}
+          isOpen={isOpen}
+          isMinimized={false}
           messages={messages}
           streamingMessage={streamingMessage}
           isLoading={isLoading}
           isTyping={isTyping}
           showQuestions={showQuestions}
-          onMinimize={handleToggleMinimized}
-          onClose={() => isEmbedded ? handleToggleMinimized() : setIsOpen(false)}
+          onMinimize={() => {}}
+          onClose={handleCloseChat}
           onSendMessage={sendMessage}
           onQuestionClick={handleQuestionClick}
-          onHeaderClick={handleHeaderClick}
           isEmbedded={isEmbedded}
         />
       )}

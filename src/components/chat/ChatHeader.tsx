@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { MessageCircle, X, Minimize2, ChevronUp, ChevronDown } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -20,8 +20,6 @@ interface ChatHeaderProps {
   onMinimize: () => void;
   /** Callback function to handle closing the chat window */
   onClose: () => void;
-  /** Callback function when header is clicked */
-  onHeaderClick?: () => void;
   /** Whether the widget is in embedded mode */
   isEmbedded?: boolean;
 }
@@ -36,22 +34,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isMinimized, 
   onMinimize, 
   onClose, 
-  onHeaderClick,
   isEmbedded = false 
 }) => {
-  const handleHeaderClick = () => {
-    if (onHeaderClick) {
-      onHeaderClick();
-    }
-  };
-
   return (
-    <div 
-      className={`bg-gradient-to-r from-[#0077FF] to-[#00E89D] p-4 text-white flex-shrink-0 ${
-        isEmbedded && isMinimized ? 'cursor-pointer hover:from-[#0066CC] hover:to-[#00D88A] transition-all' : ''
-      }`}
-      onClick={isEmbedded && isMinimized ? handleHeaderClick : undefined}
-    >
+    <div className="bg-gradient-to-r from-[#0077FF] to-[#00E89D] p-4 text-white flex-shrink-0">
       <div className="flex items-center justify-between">
         {/* Left section with logo and title */}
         <div className="flex items-center space-x-3">
@@ -76,29 +62,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
         </div>
         
-        {/* Right section with control buttons */}
+        {/* Right section with close button */}
         <div className="flex space-x-2">
-          {/* In embedded mode, show minimize/expand button */}
-          {isEmbedded && (
-            <Button
-              onClick={onMinimize}
-              className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
-            >
-              {isMinimized ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
-          )}
-          
-          {/* Show minimize button only in non-embedded mode */}
-          {!isEmbedded && (
-            <Button
-              onClick={onMinimize}
-              className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
-            >
-              <Minimize2 className="w-4 h-4" />
-            </Button>
-          )}
-          
-          {/* Close button - in embedded mode it minimizes, in normal mode it closes */}
           <Button
             onClick={onClose}
             className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
