@@ -1,3 +1,4 @@
+
 /**
  * Chat Bubble Component
  * This component represents the floating chat bubble button that toggles the visibility
@@ -30,12 +31,12 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ isOpen, onOpen }) => {
   return (
     <div 
       className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${
-        isOpen ? 'scale-0' : 'scale-100'
+        isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100 pointer-events-auto'
       }`}
     >
       <Button
         onClick={onOpen}
-        className="chat-bubble w-16 h-16 rounded-full hover:scale-105 transition-all duration-300"
+        className="chat-bubble w-16 h-16 rounded-full hover:scale-105 transition-all duration-300 shadow-lg"
       >
         {/* BIC Logo with fallback to MessageCircle icon */}
         <img 

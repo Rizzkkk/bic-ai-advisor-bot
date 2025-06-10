@@ -1,4 +1,3 @@
-
 /**
  * BICChatbot Component
  * This is the main component that orchestrates the entire chatbot user interface and its core functionalities.
@@ -180,6 +179,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
    * Handle opening the chat widget
    */
   const handleOpenChat = () => {
+    console.log('Opening chat');
     setIsOpen(true);
     setIsMinimized(false);
   };
@@ -188,6 +188,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
    * Handle closing the chat widget
    */
   const handleCloseChat = () => {
+    console.log('Closing chat');
     if (isEmbedded) {
       setIsOpen(false);
       setIsMinimized(true);
@@ -196,10 +197,12 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     }
   };
 
+  console.log('ChatApplication render - isOpen:', isOpen, 'isEmbedded:', isEmbedded);
+
   return (
     <div className={isEmbedded ? "h-full w-full overflow-hidden bg-white" : ""}>
-      {/* Chat bubble - show in both modes when chat is closed */}
-      {(!isOpen || !isEmbedded) && (
+      {/* Chat bubble - always show when chat is closed */}
+      {!isOpen && (
         <ChatBubble 
           isOpen={isOpen}
           onOpen={handleOpenChat}
