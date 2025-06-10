@@ -47,10 +47,10 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
       setIsMinimized(true);
     }
 
-    // Apply iframe-specific styles with explicit white background
+    // Apply iframe-specific styles
     if (embedded) {
-      document.body.style.background = '#ffffff';
-      document.documentElement.style.background = '#ffffff';
+      document.body.style.background = 'transparent';
+      document.documentElement.style.background = 'transparent';
       document.body.style.margin = '0';
       document.body.style.padding = '0';
       document.body.style.height = '100vh';
@@ -179,7 +179,6 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
    * Handle opening the chat widget
    */
   const handleOpenChat = () => {
-    console.log('Opening chat');
     setIsOpen(true);
     setIsMinimized(false);
   };
@@ -188,7 +187,6 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
    * Handle closing the chat widget
    */
   const handleCloseChat = () => {
-    console.log('Closing chat');
     if (isEmbedded) {
       setIsOpen(false);
       setIsMinimized(true);
@@ -197,12 +195,10 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     }
   };
 
-  console.log('ChatApplication render - isOpen:', isOpen, 'isEmbedded:', isEmbedded);
-
   return (
-    <div className={isEmbedded ? "h-full w-full overflow-hidden bg-white" : ""}>
-      {/* Chat bubble - always show when chat is closed */}
-      {!isOpen && (
+    <div className={isEmbedded ? "h-full w-full overflow-hidden" : ""}>
+      {/* Chat bubble - show in both modes when chat is closed */}
+      {(!isOpen || !isEmbedded) && (
         <ChatBubble 
           isOpen={isOpen}
           onOpen={handleOpenChat}
