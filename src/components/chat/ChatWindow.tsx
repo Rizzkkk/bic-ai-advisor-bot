@@ -64,12 +64,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onQuestionClick,
   isEmbedded = false
 }) => {
-  // Dynamic class names for chat window positioning and animations
+  // Smaller dimensions for better proportions - 320x450px instead of 350x500px
   const chatWindowClass = isEmbedded 
     ? "fixed inset-0 z-50 h-full w-full" 
     : `fixed bottom-6 right-6 z-50 transition-all duration-500 ease-out ${
         isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none hidden'
-      } h-[500px] w-[350px] max-w-[calc(100vw-2rem)] sm:max-w-[350px]`;
+      } h-[450px] w-[320px] max-w-[calc(100vw-2rem)] sm:max-w-[320px]`;
 
   return (
     <div className={chatWindowClass}>

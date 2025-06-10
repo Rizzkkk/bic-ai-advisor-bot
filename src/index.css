@@ -12,7 +12,7 @@
 
 @layer base {
   :root {
-    --background: transparent;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -103,9 +103,9 @@
     @apply border-border;
   }
 
-  /* Make all container backgrounds transparent for embedded mode */
+  /* Set explicit white backgrounds for embedded mode - no transparency */
   html, body, #root, .app, .main-container {
-    background: transparent !important;
+    background: #ffffff !important;
     margin: 0;
     padding: 0;
     height: 100%;
@@ -119,31 +119,29 @@
 
   /* Chat widget specific styles */
   .chat-widget-container {
-    @apply bg-transparent;
+    background: #ffffff !important;
     width: 100%;
     height: 100%;
     position: relative;
   }
 
-  /* Style the chat window with glass effect */
+  /* Style the chat window with solid background - no transparency */
   .chat-window {
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
+    background: #ffffff !important;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
 
-  /* Embedded mode styles - fills entire iframe */
+  /* Embedded mode styles - solid white background for cross-browser compatibility */
   .embedded-chat-window {
-    background: rgba(255, 255, 255, 0.98) !important;
-    backdrop-filter: blur(10px) !important;
+    background: #ffffff !important;
     border-radius: 16px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
     width: 100% !important;
     height: 100% !important;
     max-width: none !important;

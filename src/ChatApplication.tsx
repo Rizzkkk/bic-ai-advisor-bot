@@ -1,3 +1,4 @@
+
 /**
  * BICChatbot Component
  * This is the main component that orchestrates the entire chatbot user interface and its core functionalities.
@@ -47,10 +48,10 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
       setIsMinimized(true);
     }
 
-    // Apply iframe-specific styles
+    // Apply iframe-specific styles with explicit white background
     if (embedded) {
-      document.body.style.background = 'transparent';
-      document.documentElement.style.background = 'transparent';
+      document.body.style.background = '#ffffff';
+      document.documentElement.style.background = '#ffffff';
       document.body.style.margin = '0';
       document.body.style.padding = '0';
       document.body.style.height = '100vh';
@@ -196,7 +197,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   };
 
   return (
-    <div className={isEmbedded ? "h-full w-full overflow-hidden" : ""}>
+    <div className={isEmbedded ? "h-full w-full overflow-hidden bg-white" : ""}>
       {/* Chat bubble - show in both modes when chat is closed */}
       {(!isOpen || !isEmbedded) && (
         <ChatBubble 
