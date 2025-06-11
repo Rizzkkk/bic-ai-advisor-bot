@@ -11,7 +11,7 @@
 
 @layer base {
   :root {
-    --background: transparent;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -104,7 +104,6 @@
 
   /* Make all container backgrounds transparent for embedded mode */
   html, body, #root, .app, .main-container {
-    background: transparent !important;
     margin: 0;
     padding: 0;
     height: 100%;
@@ -126,7 +125,8 @@
 
   /* Style the chat window with glass effect */
   .chat-window {
-    background: rgba(255, 255, 255, 0.98);
+    background: hsl(var(--background) / 0.98);
+    color: hsl(var(--foreground));
     backdrop-filter: blur(10px);
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -138,7 +138,8 @@
 
   /* Embedded mode styles - fills entire iframe */
   .embedded-chat-window {
-    background: rgba(255, 255, 255, 0.98) !important;
+    background: hsl(var(--background) / 0.98) !important;
+    color: hsl(var(--foreground)) !important;
     backdrop-filter: blur(10px) !important;
     border-radius: 16px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
