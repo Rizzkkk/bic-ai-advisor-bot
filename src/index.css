@@ -162,7 +162,7 @@
   }
 
   html, body {
-    background: #fff !important;
-    background-color: #fff !important;
+    background: transparent !important;
+    background-color: transparent !important;
   }
 }
