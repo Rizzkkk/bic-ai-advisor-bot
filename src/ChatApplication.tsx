@@ -76,7 +76,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
 
   // Add dark mode detection and class application
   useEffect(() => {
-    const root = document.getElementById('root');
+    const root = document.documentElement; // Apply to <html> for iframe compatibility
     if (!root) return;
     function applyTheme() {
       const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
