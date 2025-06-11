@@ -76,16 +76,19 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
 
   // Add dark mode detection and class application
   useEffect(() => {
-    const root = document.getElementById('root'); // or use a more specific chat widget container if needed
+    const root = document.getElementById('root');
     if (!root) return;
     function applyTheme() {
       const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      console.log('System dark mode detected:', isDark);
+      console.log('Current root classList before:', root.classList.value);
       if (isDark) {
         root.classList.add('dark');
       } else {
         root.classList.remove('dark');
       }
-      console.log('Theme classList:', root.classList.value);
+      console.log('Current root classList after:', root.classList.value);
+      console.log('Root element:', root);
     }
     applyTheme();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
