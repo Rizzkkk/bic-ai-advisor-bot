@@ -102,18 +102,12 @@
     @apply border-border;
   }
 
-  /* CRITICAL: Force transparent backgrounds for all root elements */
+  /* Force transparent backgrounds for all root elements */
   html, body, #root {
     margin: 0 !important;
     padding: 0 !important;
     height: 100% !important;
     width: 100% !important;
-    background: transparent !important;
-    background-color: transparent !important;
-  }
-
-  /* Force transparency even in dark mode */
-  .dark html, .dark body, .dark #root {
     background: transparent !important;
     background-color: transparent !important;
   }
@@ -133,12 +127,12 @@
 
   /* Style the chat window with glass effect - responsive to theme */
   .chat-window {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: hsl(var(--background) / 0.95) !important;
     color: hsl(var(--foreground)) !important;
     backdrop-filter: blur(10px) !important;
     border-radius: 16px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid hsl(var(--border) / 0.2) !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
@@ -147,19 +141,18 @@
   /* Dark mode specific adjustments for chat window */
   .dark .chat-window {
     background: rgba(15, 23, 42, 0.95) !important;
-    color: rgba(248, 250, 252, 1) !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
     border: 1px solid rgba(148, 163, 184, 0.2) !important;
   }
 
   /* Embedded mode styles - fills entire iframe with transparency */
   .embedded-chat-window {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: hsl(var(--background) / 0.95) !important;
     color: hsl(var(--foreground)) !important;
     backdrop-filter: blur(10px) !important;
     border-radius: 16px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid hsl(var(--border) / 0.2) !important;
     width: 100% !important;
     height: 100% !important;
     max-width: none !important;
@@ -175,7 +168,6 @@
   /* Dark mode specific adjustments for embedded chat window */
   .dark .embedded-chat-window {
     background: rgba(15, 23, 42, 0.95) !important;
-    color: rgba(248, 250, 252, 1) !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
     border: 1px solid rgba(148, 163, 184, 0.2) !important;
   }
@@ -192,45 +184,27 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   }
 
-  /* CRITICAL: Override ALL potential background classes */
-  .bg-background,
-  .dark .bg-background,
-  .bg-card,
-  .dark .bg-card,
-  .bg-popover,
-  .dark .bg-popover {
-    background: transparent !important;
-    background-color: transparent !important;
-  }
-
-  /* Force transparency for any Tailwind background utilities */
-  [class*="bg-"]:not(.chat-window):not(.embedded-chat-window):not(.chat-bubble) {
-    background-color: transparent !important;
-  }
-
-  .dark [class*="bg-"]:not(.chat-window):not(.embedded-chat-window):not(.chat-bubble) {
-    background-color: transparent !important;
-  }
-
   /* Ensure all containers maintain transparency */
-  .app, .main-container, [data-radix-portal], div[data-state] {
+  .app, .main-container, [data-radix-portal] {
     background: transparent !important;
     background-color: transparent !important;
   }
 
-  .dark .app, .dark .main-container, .dark [data-radix-portal], .dark div[data-state] {
-    background: transparent !important;
+  /* Override any potential background from Tailwind classes */
+  .bg-background {
     background-color: transparent !important;
   }
 
-  /* Override any potential Radix UI backgrounds */
-  [data-radix-portal] > * {
-    background: transparent !important;
+  .dark .bg-background {
     background-color: transparent !important;
   }
 
-  .dark [data-radix-portal] > * {
-    background: transparent !important;
-    background-color: transparent !important;
+  /* Ensure card components respect transparency */
+  .bg-card {
+    background-color: hsl(var(--background) / 0.95) !important;
+  }
+
+  .dark .bg-card {
+    background-color: rgba(15, 23, 42, 0.95) !important;
   }
 }
