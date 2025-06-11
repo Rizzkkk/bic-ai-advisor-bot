@@ -17,6 +17,7 @@ const Card = React.forwardRef<
       !removeBackground && "bg-card text-card-foreground",
       className
     )}
+    style={removeBackground ? { background: 'transparent', backgroundColor: 'transparent' } : undefined}
     {...props}
   />
 ))

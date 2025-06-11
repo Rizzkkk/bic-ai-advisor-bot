@@ -47,15 +47,42 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
       setIsMinimized(true);
     }
 
-    // Apply iframe-specific styles
+    // Apply iframe-specific styles with proper transparency
     if (embedded) {
-      document.body.style.background = 'transparent';
-      document.documentElement.style.background = 'transparent';
-      document.body.style.margin = '0';
-      document.body.style.padding = '0';
-      document.body.style.height = '100vh';
-      document.body.style.width = '100vw';
-      document.body.style.overflow = 'hidden';
+      const applyTransparentStyles = () => {
+        document.body.style.background = 'transparent';
+        document.body.style.backgroundColor = 'transparent';
+        document.documentElement.style.background = 'transparent';
+        document.documentElement.style.backgroundColor = 'transparent';
+        document.body.style.margin = '0';
+        document.body.style.padding = '0';
+        document.body.style.height = '100vh';
+        document.body.style.width = '100vw';
+        document.body.style.overflow = 'hidden';
+        
+        // Ensure root element is also transparent
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+          rootElement.style.background = 'transparent';
+          rootElement.style.backgroundColor = 'transparent';
+          rootElement.style.height = '100%';
+          rootElement.style.width = '100%';
+        }
+      };
+
+      applyTransparentStyles();
+      
+      // Reapply styles when theme changes
+      const observer = new MutationObserver(() => {
+        applyTransparentStyles();
+      });
+      
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+
+      return () => observer.disconnect();
     }
   }, []);
 
@@ -74,28 +101,44 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     }
   }, [isOpen, messages.length]);
 
-  // Add dark mode detection and class application
+  // Add dark mode detection and class application with transparency preservation
   useEffect(() => {
-    const root = document.documentElement; // Apply to <html> for iframe compatibility
+    const root = document.documentElement;
     if (!root) return;
+    
     function applyTheme() {
       const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       console.log('System dark mode detected:', isDark);
-      console.log('Current root classList before:', root.classList.value);
+      
       if (isDark) {
         root.classList.add('dark');
       } else {
         root.classList.remove('dark');
       }
-      console.log('Current root classList after:', root.classList.value);
-      console.log('Root element:', root);
+      
+      // Ensure transparency is maintained regardless of theme
+      if (isEmbedded) {
+        document.body.style.background = 'transparent';
+        document.body.style.backgroundColor = 'transparent';
+        document.documentElement.style.background = 'transparent';
+        document.documentElement.style.backgroundColor = 'transparent';
+        
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+          rootElement.style.background = 'transparent';
+          rootElement.style.backgroundColor = 'transparent';
+        }
+      }
     }
+    
     applyTheme();
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', applyTheme);
+    
     return () => {
-      window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', applyTheme);
+      mediaQuery.removeEventListener('change', applyTheme);
     };
-  }, []);
+  }, [isEmbedded]);
 
   /**
    * Handles sending messages to the AI service through Supabase Edge Functions
@@ -219,7 +262,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   };
 
   return (
-    <div className={isEmbedded ? "h-full w-full overflow-hidden" : ""}>
+    <div className={`${isEmbedded ? "h-full w-full overflow-hidden" : ""}`} style={{ background: 'transparent', backgroundColor: 'transparent' }}>
       {/* Chat bubble - show in both modes when chat is closed */}
       {(!isOpen || !isEmbedded) && (
         <ChatBubble 
