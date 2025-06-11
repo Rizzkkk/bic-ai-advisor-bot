@@ -126,7 +126,7 @@
 
   /* Style the chat window with glass effect */
   .chat-window {
-    background: hsl(var(--background) / 0.98);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -138,7 +138,7 @@
 
   /* Embedded mode styles - fills entire iframe */
   .embedded-chat-window {
-    background: hsl(var(--background) / 0.98) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
     backdrop-filter: blur(10px) !important;
     border-radius: 16px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
