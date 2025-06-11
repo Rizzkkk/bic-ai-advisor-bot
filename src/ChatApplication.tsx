@@ -74,6 +74,26 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     }
   }, [isOpen, messages.length]);
 
+  // Add dark mode detection and class application
+  useEffect(() => {
+    const root = document.getElementById('root'); // or use a more specific chat widget container if needed
+    if (!root) return;
+    function applyTheme() {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      console.log('Theme classList:', root.classList.value);
+    }
+    applyTheme();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+    return () => {
+      window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', applyTheme);
+    };
+  }, []);
+
   /**
    * Handles sending messages to the AI service through Supabase Edge Functions
    * @param {string} content - The message content to send
