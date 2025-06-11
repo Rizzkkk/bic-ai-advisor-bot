@@ -160,4 +160,9 @@
     @apply bg-gradient-to-r from-[#0077FF] to-[#0066CC];
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
+
+  html, body {
+    background: #fff !important;
+    background-color: #fff !important;
+  }
 }
