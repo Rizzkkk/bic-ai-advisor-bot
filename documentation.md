@@ -198,11 +198,35 @@ To embed the Vercel-deployed application into a Framer project, the following HT
     -   `z-index: 1000;`: Controls the stacking order, ensuring the chatbot widget appears on top of most other page elements. This value might need adjustment if there are conflicting `z-index` values on the host page.
 -   **`frameborder="0"`**: A deprecated HTML attribute (but still widely supported) to remove the iframe's border. The `border: none;` in the `style` attribute provides the same effect.
 
-## 9. Troubleshooting
+## 9. Dark Mode & Transparency Handling
+
+To ensure the chat widget always appears with a transparent background and a white chatbox—regardless of the user's device, browser, or system dark mode setting—the following approach is used:
+
+- All relevant containers (`html`, `body`, `#root`, `.app`, `.main-container`, `.chat-widget-container`) are forced to use `color-scheme: light` and have their backgrounds set to `transparent`.
+- The chat window itself (`.chat-window`, `.embedded-chat-window`) is always white with dark text.
+- No dark mode CSS classes or logic are applied to the widget.
+
+**Key CSS:**
+```css
+html, body, #root, .app, .main-container, .chat-widget-container {
+  color-scheme: light !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.chat-window, .embedded-chat-window {
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: #222 !important;
+}
+```
+
+This ensures the chat widget remains visually consistent and readable in all themes and browsers, and prevents unwanted black backgrounds in dark mode.
+
+## 10. Troubleshooting
 
 This section outlines common issues and their potential solutions.
 
-### 9.1 "Incorrect API key provided" or "Supabase function error: 500 - OpenAI API error: 401"
+### 10.1 "Incorrect API key provided" or "Supabase function error: 500 - OpenAI API error: 401"
 
 **Cause**: The OpenAI API key configured in your Supabase project's Edge Function is invalid, expired, or malformed.
 
@@ -214,7 +238,7 @@ This section outlines common issues and their potential solutions.
 5.  Add a new secret with the name `OPENAI_API_KEY` and paste the newly generated key as its value. Ensure there are no extra spaces or characters before or after the key.
 6.  The changes should take effect immediately. Try sending a message in the chatbot again.
 
-### 9.2 "Bun command not found"
+### 10.2 "Bun command not found"
 
 **Cause**: Bun is not installed on your system or is not correctly added to your system's PATH.
 
@@ -225,7 +249,7 @@ This section outlines common issues and their potential solutions.
 2.  **Restart Terminal**: After installation, restart your terminal or editor to ensure the PATH changes are applied.
 3.  **Verify Installation**: Run `bun --version` to confirm Bun is installed and accessible.
 
-### 9.3 Dependencies Not Installing Correctly
+### 10.3 Dependencies Not Installing Correctly
 
 **Cause**: Issues during the `bun install` process.
 
@@ -240,7 +264,7 @@ This section outlines common issues and their potential solutions.
     ```
 3.  **Check Network**: Ensure you have a stable internet connection, as Bun needs to download packages from npm.
 
-## 10. Support
+## 11. Support
 
 For any further assistance or issues not covered in this documentation, please reach out to:
 

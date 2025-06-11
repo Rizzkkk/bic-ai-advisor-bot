@@ -1,4 +1,3 @@
-
 /**
  * ChatHeader Component
  * The header section of the chat window containing the BIC logo, title,
@@ -6,7 +5,7 @@
  */
 
 import React from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X, MinimizeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -57,18 +56,26 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
           {/* Title and subtitle */}
           <div>
-            <h3 className="font-semibold text-lg">Chat with Bibhrajit</h3>
+            <h3 className="font-semibold text-lg">Chat with us</h3>
             <p className="text-white/80 text-sm">BIC Investment Corp</p>
           </div>
         </div>
         
-        {/* Right section with close button */}
-        <div className="flex space-x-2">
+        {/* Right section with minimize and close buttons */}
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            onClick={onMinimize}
+            className="text-white hover:bg-white/20 h-10 w-10 p-0 bg-transparent flex items-center justify-center"
+            aria-label="Minimize chat"
+          >
+            <MinimizeIcon className="w-5 h-5" />
+          </Button>
           <Button
             onClick={onClose}
-            className="text-white hover:bg-white/20 h-8 w-8 p-0 bg-transparent"
+            className="text-white hover:bg-white/20 h-10 w-10 p-0 bg-transparent flex items-center justify-center"
+            aria-label="Close chat"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
       </div>

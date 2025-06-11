@@ -29,6 +29,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const [showQuestions, setShowQuestions] = useState(true);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isEmbedded, setIsEmbedded] = useState(false);
+  const [hasWelcomed, setHasWelcomed] = useState(false);
 
   /**
    * Effect to check if we're in embedded mode and handle initial state
@@ -63,7 +64,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
    * Effect to show welcome message when chat is first opened
    */
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
+    if (isOpen && messages.length === 0 && !hasWelcomed) {
       const welcomeMessage: Message = {
         id: Date.now().toString(),
         content: "Hi! I'm Bibhrajit from BIC. I help AI, robotics, and autonomy founders raise capital and scale their companies. What can I help you with today?",
@@ -71,8 +72,9 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
+      setHasWelcomed(true);
     }
-  }, [isOpen, messages.length]);
+  }, [isOpen, messages.length, hasWelcomed]);
 
   /**
    * Handles sending messages to the AI service through Supabase Edge Functions
@@ -184,38 +186,45 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   };
 
   /**
-   * Handle closing the chat widget
+   * Handle closing the chat widget (X button)
    */
   const handleCloseChat = () => {
-    if (isEmbedded) {
-      setIsOpen(false);
-      setIsMinimized(true);
-    } else {
-      setIsOpen(false);
-    }
+    setIsOpen(false);
+    setIsMinimized(false);
+    setTimeout(() => {
+      setMessages([]);
+      setHasWelcomed(false);
+    }, 500); // Delay reset by 500ms for a reset effect
+  };
+
+  /**
+   * Minimize chat (hide window, keep messages)
+   */
+  const handleMinimizeChat = () => {
+    setIsOpen(false);
+    setIsMinimized(true);
   };
 
   return (
     <div className={isEmbedded ? "h-full w-full overflow-hidden" : ""}>
-      {/* Chat bubble - show in both modes when chat is closed */}
-      {(!isOpen || !isEmbedded) && (
+      {/* Chat bubble - show when chat is closed or minimized */}
+      {(!isOpen || isMinimized) && (
         <ChatBubble 
           isOpen={isOpen}
           onOpen={handleOpenChat}
         />
       )}
-      
       {/* Main chat window - only show when open */}
       {isOpen && (
         <ChatWindow
           isOpen={isOpen}
-          isMinimized={false}
+          isMinimized={isMinimized}
           messages={messages}
           streamingMessage={streamingMessage}
           isLoading={isLoading}
           isTyping={isTyping}
           showQuestions={showQuestions}
-          onMinimize={() => {}}
+          onMinimize={handleMinimizeChat}
           onClose={handleCloseChat}
           onSendMessage={sendMessage}
           onQuestionClick={handleQuestionClick}

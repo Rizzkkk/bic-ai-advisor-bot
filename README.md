@@ -89,6 +89,30 @@ To embed the deployed chatbot as a fixed widget on another web platform (e.g., F
 
 Replace `https://my-chatbot-sigma-eight.vercel.app` with your actual Vercel deployment URL. Adjust `width`, `height`, `bottom`, and `right` values in the `style` attribute as needed for your design.
 
+## 🌓 Dark Mode & Transparency Handling
+
+To ensure the chat widget always appears with a transparent background and a white chatbox—regardless of the user's device, browser, or system dark mode setting—the following approach is used:
+
+- All relevant containers (`html`, `body`, `#root`, `.app`, `.main-container`, `.chat-widget-container`) are forced to use `color-scheme: light` and have their backgrounds set to `transparent`.
+- The chat window itself (`.chat-window`, `.embedded-chat-window`) is always white with dark text.
+- No dark mode CSS classes or logic are applied to the widget.
+
+**Key CSS:**
+```css
+html, body, #root, .app, .main-container, .chat-widget-container {
+  color-scheme: light !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.chat-window, .embedded-chat-window {
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: #222 !important;
+}
+```
+
+This ensures the chat widget remains visually consistent and readable in all themes and browsers, and prevents unwanted black backgrounds in dark mode.
+
 ## 📧 Support
 
 For any inquiries, technical support, or further assistance, please contact us at `info@bicorp.ai`.
