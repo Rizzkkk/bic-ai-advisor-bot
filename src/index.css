@@ -130,3 +130,15 @@
     background-color: transparent !important;
   }
 }
+
+/* Universal override for all backgrounds in the widget */
+html, body, #root, .app, .main-container, .chat-widget-container, .chat-window, .embedded-chat-window {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Keep chat window content white */
+.chat-window, .embedded-chat-window {
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: #222 !important;
+}
