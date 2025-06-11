@@ -131,8 +131,9 @@
   }
 }
 
-/* Universal override for all backgrounds in the widget */
-html, body, #root, .app, .main-container, .chat-widget-container, .chat-window, .embedded-chat-window {
+/* Force light color scheme to prevent dark mode black backgrounds */
+html, body, #root, .app, .main-container, .chat-widget-container {
+  color-scheme: light !important;
   background: transparent !important;
   background-color: transparent !important;
 }
