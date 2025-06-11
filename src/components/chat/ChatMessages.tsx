@@ -51,9 +51,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   const premadeQuestions = [
     "How do I pitch my AI startup to BIC?",
     "What services do you offer for fundraising?", 
-    "Can you help with go-to-market strategy?",
-    "What makes a good robotics startup?",
-    "How should I structure my Series A round?"
+    "Can you help with go-to-market strategy?"
   ];
 
   /**
