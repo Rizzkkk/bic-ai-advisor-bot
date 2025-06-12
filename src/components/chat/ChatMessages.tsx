@@ -81,6 +81,27 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     scrollToBottom();
   }, [messages, streamingMessage, scrollToBottom]);
 
+  // Utility to auto-link URLs in text
+  function linkify(text: string) {
+    const urlRegex = /https?:\/\/[\w\-._~:/?#[\]@!$&'()*+,;=%]+/g;
+    return text.split(urlRegex).map((part, i) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#0077FF] underline break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  }
+
   return (
     <div 
       ref={messagesContainerRef}
@@ -100,7 +121,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                   : 'bg-gray-100 text-gray-800 rounded-bl-md'
               }`}
             >
-              {message.content}
+              {linkify(message.content)}
             </div>
           </div>
         </div>
@@ -110,7 +131,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       {streamingMessage && (
         <div className="flex justify-start">
           <div className="max-w-[85%] p-3 rounded-2xl rounded-bl-md bg-gray-100 text-gray-800 whitespace-pre-wrap">
-            {streamingMessage}
+            {linkify(streamingMessage)}
             <span className="animate-pulse ml-1">●</span>
           </div>
         </div>
