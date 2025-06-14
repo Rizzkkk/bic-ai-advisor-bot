@@ -1,0 +1,145 @@
+/*
+ * Global Stylesheet
+ * This file contains global CSS rules that apply across the entire application.
+ * It defines fundamental styles for elements like body, typography, and any other
+ * base styles inherited by components.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* white */
+    --foreground: 222.2 84% 4.9%; /* dark text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Make all container backgrounds transparent for embedded mode */
+  html, body, #root, .app, .main-container {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    background: transparent !important;
+  }
+
+  /* Prevent overflow issues in embedded mode */
+  body {
+    overflow: hidden;
+  }
+
+  /* Chat widget specific styles */
+  .chat-widget-container {
+    @apply bg-transparent;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  /* Style the chat window with glass effect */
+  .chat-window {
+    background: rgba(255, 255, 255, 0.98) !important;
+    color: #222 !important;
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border: 1px solid hsl(var(--border) / 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Embedded mode styles - fills entire iframe */
+  .embedded-chat-window {
+    background: rgba(255, 255, 255, 0.98) !important;
+    color: #222 !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid hsl(var(--border) / 0.2) !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Chat bubble styling */
+  .chat-bubble {
+    @apply bg-gradient-to-r from-[#0077FF] to-[#0066CC];
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  html, body {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+}
+
+/* Force light color scheme to prevent dark mode black backgrounds */
+html, body, #root, .app, .main-container, .chat-widget-container {
+  color-scheme: light !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Keep chat window content white */
+.chat-window, .embedded-chat-window {
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: #222 !important;
+}
