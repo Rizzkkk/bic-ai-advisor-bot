@@ -81,18 +81,24 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     scrollToBottom();
   }, [messages, streamingMessage, scrollToBottom]);
 
-  // Utility to auto-link URLs in text
+  // Enhanced utility to auto-link URLs in text
   function linkify(text: string) {
-    const urlRegex = /https?:\/\/[\w\-._~:/?#[\]@!$&'()*+,;=%]+/g;
-    return text.split(urlRegex).map((part, i) => {
+    // More comprehensive URL regex that captures various URL formats
+    const urlRegex = /(https?:\/\/(?:[-\w.])+(?:\:[0-9]+)?(?:\/(?:[\w\/_\.])*)?(?:\?(?:[\w&=%.]*))?(?:\#(?:[\w.]*))?)/gi;
+    
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, i) => {
+      // Check if this part matches a URL pattern
       if (urlRegex.test(part)) {
+        urlRegex.lastIndex = 0; // Reset regex for next use
         return (
           <a
             key={i}
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#0077FF] underline break-all"
+            className="text-[#0077FF] underline hover:text-[#0055CC] break-all"
           >
             {part}
           </a>
