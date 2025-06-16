@@ -67,7 +67,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     if (isOpen && messages.length === 0 && !hasWelcomed) {
       const welcomeMessage: Message = {
         id: Date.now().toString(),
-        content: "Hi! Welcome to BIC! I help AI, robotics, and autonomy founders raise capital and scale their companies. What can I help you with today?",
+        content: "Hi! Welcome to BIC! We help AI, robotics, and autonomy founders raise capital and scale their companies. What can we help you today?",
         role: 'assistant',
         timestamp: new Date()
       };
