@@ -44,6 +44,7 @@ interface ChatWindowProps {
   onToggleVoiceMode?: () => void;
   onPlayAudio?: (messageId: string, text: string) => void;
   onPauseAudio?: () => void;
+  onShowVoiceSettings?: () => void;
   playingMessageId?: string | null;
   isPlaying?: boolean;
 }
@@ -75,6 +76,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onToggleVoiceMode = () => {},
   onPlayAudio = () => {},
   onPauseAudio = () => {},
+  onShowVoiceSettings = () => {},
   playingMessageId = null,
   isPlaying = false
 }) => {
@@ -121,6 +123,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           isProcessingVoice={isProcessingVoice}
           onStartRecording={onStartRecording}
           onStopRecording={onStopRecording}
+          onShowVoiceSettings={onShowVoiceSettings}
         />
       </Card>
     </div>
