@@ -1,11 +1,11 @@
+
 /**
  * ChatHeader Component
- * The header section of the chat window containing the BIC logo, title,
- * and control buttons for minimizing and closing the chat.
+ * Displays the header section of the chat window with title, minimize/close buttons, and voice toggle
  */
 
 import React from 'react';
-import { MessageCircle, X, MinimizeIcon } from 'lucide-react';
+import { X, Minus, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -21,63 +21,83 @@ interface ChatHeaderProps {
   onClose: () => void;
   /** Whether the widget is in embedded mode */
   isEmbedded?: boolean;
+  /** Whether voice mode is enabled */
+  voiceMode?: boolean;
+  /** Callback to toggle voice mode */
+  onToggleVoiceMode?: () => void;
 }
 
 /**
  * ChatHeader Component
- * Renders the header section of the chat window with branding and controls
+ * Renders the header of the chat interface with controls
  * @param {ChatHeaderProps} props - Component props
- * @returns {JSX.Element} The chat window header component
+ * @returns {JSX.Element} The chat header component
  */
-const ChatHeader: React.FC<ChatHeaderProps> = ({ 
-  isMinimized, 
-  onMinimize, 
-  onClose, 
-  isEmbedded = false 
+const ChatHeader: React.FC<ChatHeaderProps> = ({
+  isMinimized,
+  onMinimize,
+  onClose,
+  isEmbedded = false,
+  voiceMode = false,
+  onToggleVoiceMode = () => {}
 }) => {
   return (
-    <div className="bg-gradient-to-r from-[#0077FF] to-[#00E89D] p-4 text-white flex-shrink-0">
-      <div className="flex items-center justify-between">
-        {/* Left section with logo and title */}
-        <div className="flex items-center space-x-3">
-          {/* Logo container with fallback icon */}
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
-            <img 
-              src="/bic-logo.png" 
-              alt="BIC" 
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                // Show fallback icon if logo fails to load
-                (e.target as HTMLElement).style.display = 'none';
-                (e.target as HTMLElement).nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <MessageCircle className="w-6 h-6 text-[#0077FF] hidden" />
-          </div>
-          {/* Title and subtitle */}
-          <div>
-            <h3 className="font-semibold text-lg">Chat with us</h3>
-            <p className="text-white/80 text-sm">BIC Investment Corp</p>
-          </div>
+    <div className="flex items-center justify-between p-4 border-b bg-white">
+      {/* Chat title and logo */}
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-[#0077FF] rounded-full flex items-center justify-center">
+          <span className="text-white font-bold text-sm">BIC</span>
         </div>
-        
-        {/* Right section with minimize and close buttons */}
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            onClick={onMinimize}
-            className="text-white hover:bg-white/20 h-10 w-10 p-0 bg-transparent flex items-center justify-center"
-            aria-label="Minimize chat"
-          >
-            <MinimizeIcon className="w-5 h-5" />
-          </Button>
-          <Button
-            onClick={onClose}
-            className="text-white hover:bg-white/20 h-10 w-10 p-0 bg-transparent flex items-center justify-center"
-            aria-label="Close chat"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+        <div>
+          <h3 className="font-semibold text-gray-900">BIC AI Assistant</h3>
+          <p className="text-xs text-gray-500">AI, Robotics & Autonomy Expert</p>
         </div>
+      </div>
+
+      {/* Header controls */}
+      <div className="flex items-center space-x-2">
+        {/* Voice mode toggle */}
+        <Button
+          onClick={onToggleVoiceMode}
+          variant="ghost"
+          size="sm"
+          className={`w-8 h-8 p-0 rounded-full transition-colors ${
+            voiceMode 
+              ? 'bg-[#0077FF] text-white hover:bg-[#0066CC]' 
+              : 'hover:bg-gray-100'
+          }`}
+          title={voiceMode ? 'Disable voice mode' : 'Enable voice mode'}
+        >
+          {voiceMode ? (
+            <Mic className="w-4 h-4" />
+          ) : (
+            <MicOff className="w-4 h-4" />
+          )}
+        </Button>
+
+        {/* Minimize/Close buttons - only show in non-embedded mode */}
+        {!isEmbedded && (
+          <>
+            <Button
+              onClick={onMinimize}
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 p-0 rounded-full hover:bg-gray-100"
+              title="Minimize chat"
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 p-0 rounded-full hover:bg-gray-100"
+              title="Close chat"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

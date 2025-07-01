@@ -10,6 +10,14 @@ export interface VoiceSettings {
   pushToTalk: boolean;
 }
 
+// Extend the Window interface to include webkitSpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
 export class VoiceService {
   private recorder: AudioRecorder;
   private player: AudioPlayer;
@@ -39,7 +47,7 @@ export class VoiceService {
 
   private initWebSpeechAPI(): void {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       this.webSpeechRecognition = new SpeechRecognition();
       this.webSpeechRecognition.continuous = false;
       this.webSpeechRecognition.interimResults = false;
