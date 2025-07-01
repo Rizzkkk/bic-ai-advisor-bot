@@ -7,11 +7,12 @@
  * It integrates various chat-related sub-components to form the complete chatbot experience.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { OpenAIService, createSystemPrompt, type ChatMessage } from '@/utils/openaiService';
+import { VoiceService, type VoiceSettings } from '@/utils/VoiceService';
 import ChatBubble from './components/chat/ChatBubble';
 import ChatWindow from './components/chat/ChatWindow';
-import { Message, BICChatbotProps } from './components/chat/types';
+import { Message, BICChatbotProps, VoiceState } from './components/chat/types';
 
 /**
  * ChatApplication Component
@@ -30,6 +31,16 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isEmbedded, setIsEmbedded] = useState(false);
   const [hasWelcomed, setHasWelcomed] = useState(false);
+
+  // Voice-related state
+  const [voiceState, setVoiceState] = useState<VoiceState>({
+    isRecording: false,
+    isProcessing: false,
+    isPlaying: false,
+    voiceMode: false
+  });
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+  const voiceServiceRef = useRef<VoiceService | null>(null);
 
   /**
    * Effect to check if we're in embedded mode and handle initial state
@@ -75,6 +86,43 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
       setHasWelcomed(true);
     }
   }, [isOpen, messages.length, hasWelcomed]);
+
+  /**
+   * Initialize voice service
+   */
+  useEffect(() => {
+    voiceServiceRef.current = new VoiceService(
+      // On transcript received
+      (text: string) => {
+        sendMessage(text);
+        setVoiceState(prev => ({ ...prev, isProcessing: false }));
+      },
+      // On recording state change
+      (isRecording: boolean) => {
+        setVoiceState(prev => ({ ...prev, isRecording }));
+      },
+      // On playback state change
+      (isPlaying: boolean) => {
+        setVoiceState(prev => ({ ...prev, isPlaying }));
+        if (!isPlaying) {
+          setPlayingMessageId(null);
+        }
+      },
+      // On error
+      (error: string) => {
+        console.error('Voice service error:', error);
+        setVoiceState(prev => ({ 
+          ...prev, 
+          isRecording: false, 
+          isProcessing: false 
+        }));
+      }
+    );
+
+    return () => {
+      voiceServiceRef.current = null;
+    };
+  }, []);
 
   /**
    * Handles sending messages to the AI service through Supabase Edge Functions
@@ -170,6 +218,19 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   };
 
   /**
+   * Handle voice message sending after AI response
+   */
+  useEffect(() => {
+    if (voiceState.voiceMode && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant' && !isLoading) {
+        // Auto-play the latest AI response if voice mode is enabled
+        handlePlayAudio(lastMessage.id, lastMessage.content);
+      }
+    }
+  }, [messages, isLoading, voiceState.voiceMode]);
+
+  /**
    * Handles clicking on suggested questions
    * @param {string} question - The selected question
    */
@@ -205,6 +266,43 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     setIsMinimized(true);
   };
 
+  /**
+   * Voice-related handlers
+   */
+  const handleStartRecording = async () => {
+    if (voiceServiceRef.current) {
+      setVoiceState(prev => ({ ...prev, isProcessing: true }));
+      await voiceServiceRef.current.startRecording();
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (voiceServiceRef.current) {
+      voiceServiceRef.current.stopRecording();
+    }
+  };
+
+  const handlePlayAudio = async (messageId: string, text: string) => {
+    if (voiceServiceRef.current) {
+      setPlayingMessageId(messageId);
+      await voiceServiceRef.current.speakText(text);
+    }
+  };
+
+  const handlePauseAudio = () => {
+    if (voiceServiceRef.current) {
+      if (voiceState.isPlaying) {
+        voiceServiceRef.current.pausePlayback();
+      } else {
+        voiceServiceRef.current.resumePlayback();
+      }
+    }
+  };
+
+  const toggleVoiceMode = () => {
+    setVoiceState(prev => ({ ...prev, voiceMode: !prev.voiceMode }));
+  };
+
   return (
     <div className={isEmbedded ? "h-full w-full overflow-hidden" : ""}>
       {/* Chat bubble - show when chat is closed or minimized */}
@@ -229,6 +327,17 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
           onSendMessage={sendMessage}
           onQuestionClick={handleQuestionClick}
           isEmbedded={isEmbedded}
+          // Voice-related props
+          voiceMode={voiceState.voiceMode}
+          isRecording={voiceState.isRecording}
+          isProcessingVoice={voiceState.isProcessing}
+          onStartRecording={handleStartRecording}
+          onStopRecording={handleStopRecording}
+          onToggleVoiceMode={toggleVoiceMode}
+          onPlayAudio={handlePlayAudio}
+          onPauseAudio={handlePauseAudio}
+          playingMessageId={playingMessageId}
+          isPlaying={voiceState.isPlaying}
         />
       )}
     </div>

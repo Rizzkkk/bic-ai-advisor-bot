@@ -1,11 +1,4 @@
 
-/**
- * Chat Window Component
- * This component represents the main interface of the chatbot, containing the conversation display,
- * message input area, and control buttons (minimize/close).
- * It orchestrates the layout and interaction of various chat-related sub-components.
- */
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import ChatHeader from './ChatHeader';
@@ -42,6 +35,17 @@ interface ChatWindowProps {
   onQuestionClick: (question: string) => void;
   /** Whether the widget is in embedded mode */
   isEmbedded?: boolean;
+  /** Voice-related props */
+  voiceMode?: boolean;
+  isRecording?: boolean;
+  isProcessingVoice?: boolean;
+  onStartRecording?: () => void;
+  onStopRecording?: () => void;
+  onToggleVoiceMode?: () => void;
+  onPlayAudio?: (messageId: string, text: string) => void;
+  onPauseAudio?: () => void;
+  playingMessageId?: string | null;
+  isPlaying?: boolean;
 }
 
 /**
@@ -62,7 +66,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onClose,
   onSendMessage,
   onQuestionClick,
-  isEmbedded = false
+  isEmbedded = false,
+  voiceMode = false,
+  isRecording = false,
+  isProcessingVoice = false,
+  onStartRecording = () => {},
+  onStopRecording = () => {},
+  onToggleVoiceMode = () => {},
+  onPlayAudio = () => {},
+  onPauseAudio = () => {},
+  playingMessageId = null,
+  isPlaying = false
 }) => {
   // Dynamic class names for chat window positioning and animations
   const chatWindowClass = isEmbedded 
@@ -77,12 +91,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         removeBackground={true} 
         className={`h-full overflow-hidden flex flex-col ${isEmbedded ? 'embedded-chat-window' : 'chat-window'}`}
       >
-        {/* Chat header with close control */}
+        {/* Chat header with close control and voice toggle */}
         <ChatHeader
           isMinimized={false}
           onMinimize={onMinimize}
           onClose={onClose}
           isEmbedded={isEmbedded}
+          voiceMode={voiceMode}
+          onToggleVoiceMode={onToggleVoiceMode}
         />
 
         {/* Messages and input */}
@@ -92,10 +108,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           isTyping={isTyping}
           showQuestions={showQuestions}
           onQuestionClick={onQuestionClick}
+          onPlayAudio={onPlayAudio}
+          onPauseAudio={onPauseAudio}
+          playingMessageId={playingMessageId}
+          isPlaying={isPlaying}
         />
         <ChatInput
           isLoading={isLoading}
           onSendMessage={onSendMessage}
+          voiceMode={voiceMode}
+          isRecording={isRecording}
+          isProcessingVoice={isProcessingVoice}
+          onStartRecording={onStartRecording}
+          onStopRecording={onStopRecording}
         />
       </Card>
     </div>

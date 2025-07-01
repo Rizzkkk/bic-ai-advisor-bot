@@ -1,14 +1,9 @@
-/**
- * Chat Input Component
- * This component provides the input field where users can type their messages.
- * It typically includes a text area and a send button.
- * It handles capturing user input, managing the input state, and triggering the `sendMessage` action.
- */
 
 import React, { useRef } from 'react';
 import { Send, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import VoiceInput from './VoiceInput';
 
 /**
  * Props interface for the ChatInput component
@@ -19,6 +14,12 @@ interface ChatInputProps {
   isLoading: boolean;
   /** Callback function to handle sending a new message */
   onSendMessage: (message: string) => void;
+  /** Voice-related props */
+  voiceMode?: boolean;
+  isRecording?: boolean;
+  isProcessingVoice?: boolean;
+  onStartRecording?: () => void;
+  onStopRecording?: () => void;
 }
 
 /**
@@ -27,7 +28,15 @@ interface ChatInputProps {
  * @param {ChatInputProps} props - Component props
  * @returns {JSX.Element} The chat input component
  */
-const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ 
+  isLoading, 
+  onSendMessage,
+  voiceMode = false,
+  isRecording = false,
+  isProcessingVoice = false,
+  onStartRecording = () => {},
+  onStopRecording = () => {}
+}) => {
   // Reference to the input element for direct manipulation
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,7 +69,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
   return (
     <div className="p-4 border-t bg-gray-50 flex-shrink-0">
       {/* Input field and send button container */}
-      <div className="flex space-x-2 mb-3">
+      <div className="flex space-x-2 mb-3 items-end">
         <Input
           ref={inputRef}
           onKeyDown={handleKeyDown}
@@ -68,6 +77,18 @@ const ChatInput: React.FC<ChatInputProps> = ({ isLoading, onSendMessage }) => {
           className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
           disabled={isLoading}
         />
+        
+        {/* Voice input button (only show in voice mode) */}
+        {voiceMode && (
+          <VoiceInput
+            isRecording={isRecording}
+            isProcessing={isProcessingVoice}
+            onStartRecording={onStartRecording}
+            onStopRecording={onStopRecording}
+            disabled={isLoading}
+          />
+        )}
+        
         <Button
           onClick={handleSend}
           disabled={isLoading}

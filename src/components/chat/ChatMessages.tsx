@@ -1,12 +1,8 @@
-/**
- * Chat Messages Component
- * This component is responsible for rendering the list of messages in the chat window.
- * It displays both user and AI-generated messages, handles streaming updates for AI responses,
- * and ensures the chat scrolls to the latest message for a continuous conversation flow.
- */
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import AudioControls from './AudioControls';
 import { Message } from './types';
 
 /**
@@ -14,21 +10,26 @@ import { Message } from './types';
  * @interface ChatMessagesProps
  */
 interface ChatMessagesProps {
-  /** Array of chat messages to display */
+  /** Array of messages to display */
   messages: Message[];
   /** Currently streaming message content */
   streamingMessage: string;
-  /** Indicates if the assistant is currently typing */
+  /** Whether the assistant is typing */
   isTyping: boolean;
-  /** Controls visibility of suggested questions */
+  /** Whether to show suggested questions */
   showQuestions: boolean;
-  /** Callback function when a suggested question is clicked */
+  /** Callback when a suggested question is clicked */
   onQuestionClick: (question: string) => void;
+  /** Voice-related props */
+  onPlayAudio?: (messageId: string, text: string) => void;
+  onPauseAudio?: () => void;
+  playingMessageId?: string;
+  isPlaying?: boolean;
 }
 
 /**
  * ChatMessages Component
- * Renders the chat message history with support for streaming messages and suggested questions
+ * Displays the chat conversation with messages and suggested questions
  * @param {ChatMessagesProps} props - Component props
  * @returns {JSX.Element} The chat messages component
  */
@@ -37,68 +38,50 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   streamingMessage,
   isTyping,
   showQuestions,
-  onQuestionClick
+  onQuestionClick,
+  onPlayAudio = () => {},
+  onPauseAudio = () => {},
+  playingMessageId,
+  isPlaying = false
 }) => {
-  // Refs for scroll management
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const userScrolledRef = useRef(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Predefined questions to help users get started
-   * @type {string[]}
-   */
-  const premadeQuestions = [
-    "How do I pitch my AI startup to BIC?",
-    "What services do you offer for fundraising?", 
-    "Can you help with go-to-market strategy?"
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    }
+  }, [messages, streamingMessage, isTyping]);
+
+  // Suggested questions for new users
+  const suggestedQuestions = [
+    "How do I pitch my AI startup to investors?",
+    "What metrics do VCs look for in robotics companies?",
+    "How do I price my AI product for enterprise customers?",
+    "What are the key challenges in scaling autonomous systems?"
   ];
 
   /**
-   * Handles scroll events to detect if user has manually scrolled
-   * Updates userScrolledRef to prevent auto-scrolling if user is reading previous messages
+   * Renders a clickable link if the text contains URLs
+   * @param {string} text - The text to process
+   * @returns {React.ReactNode} - The processed text with clickable links
    */
-  const handleScroll = useCallback(() => {
-    if (messagesContainerRef.current) {
-      const container = messagesContainerRef.current;
-      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
-      userScrolledRef.current = !isAtBottom;
-    }
-  }, []);
-
-  /**
-   * Scrolls to the bottom of the messages container
-   * Only scrolls if user hasn't manually scrolled up
-   */
-  const scrollToBottom = useCallback(() => {
-    if (!userScrolledRef.current && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, []);
-
-  // Auto-scroll when new messages arrive or streaming message updates
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingMessage, scrollToBottom]);
-
-  // Enhanced utility to auto-link URLs in text
-  function linkify(text: string) {
-    // More comprehensive URL regex that captures various URL formats
-    const urlRegex = /(https?:\/\/(?:[-\w.])+(?:\:[0-9]+)?(?:\/(?:[\w\/_\.])*)?(?:\?(?:[\w&=%.]*))?(?:\#(?:[\w.]*))?)/gi;
-    
+  const renderTextWithLinks = (text: string): React.ReactNode => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
     
-    return parts.map((part, i) => {
-      // Check if this part matches a URL pattern
-      if (urlRegex.test(part)) {
-        urlRegex.lastIndex = 0; // Reset regex for next use
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
         return (
           <a
-            key={i}
+            key={index}
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#0077FF] underline hover:text-[#0055CC] break-all"
+            className="text-[#0077FF] hover:text-[#0066CC] underline hover:no-underline transition-colors"
           >
             {part}
           </a>
@@ -106,75 +89,86 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       }
       return part;
     });
-  }
+  };
 
   return (
-    <div 
-      ref={messagesContainerRef}
-      onScroll={handleScroll}
-      className="flex-1 p-4 overflow-y-auto space-y-4 min-h-0"
-    >
-      {/* Render chat message history */}
-      {messages.map((message) => (
-        <div key={message.id}>
+    <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+      <div className="space-y-4">
+        {/* Render existing messages */}
+        {messages.map((message) => (
           <div
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-3`}
+            key={message.id}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] p-3 rounded-2xl whitespace-pre-wrap ${
+              className={`max-w-[80%] p-3 rounded-lg ${
                 message.role === 'user'
-                  ? 'bg-[#0077FF] text-white rounded-br-md'
-                  : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                  ? 'bg-[#0077FF] text-white'
+                  : 'bg-white border border-gray-200 text-gray-800'
               }`}
             >
-              {linkify(message.content)}
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-sm leading-relaxed">
+                  {message.role === 'assistant' 
+                    ? renderTextWithLinks(message.content)
+                    : message.content
+                  }
+                </div>
+                {/* Audio controls for assistant messages */}
+                {message.role === 'assistant' && onPlayAudio && (
+                  <AudioControls
+                    isPlaying={isPlaying && playingMessageId === message.id}
+                    onPlay={() => onPlayAudio(message.id, message.content)}
+                    onPause={onPauseAudio}
+                  />
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
 
-      {/* Display streaming message with typing indicator */}
-      {streamingMessage && (
-        <div className="flex justify-start">
-          <div className="max-w-[85%] p-3 rounded-2xl rounded-bl-md bg-gray-100 text-gray-800 whitespace-pre-wrap">
-            {linkify(streamingMessage)}
-            <span className="animate-pulse ml-1">●</span>
-          </div>
-        </div>
-      )}
-      
-      {/* Show suggested questions for new conversations */}
-      {showQuestions && messages.length <= 1 && (
-        <div className="space-y-2">
-          <p className="text-sm text-gray-600 font-medium">Quick questions to get started:</p>
-          {premadeQuestions.map((question, index) => (
-            <Button
-              key={index}
-              onClick={() => onQuestionClick(question)}
-              className="w-full text-left justify-start text-sm h-auto py-2 px-3 border-[#0077FF]/20 text-[#0077FF] hover:bg-[#0077FF]/5 bg-transparent"
-            >
-              {question}
-            </Button>
-          ))}
-        </div>
-      )}
-      
-      {/* Display typing indicator when assistant is typing */}
-      {isTyping && !streamingMessage && (
-        <div className="flex justify-start">
-          <div className="bg-gray-100 p-3 rounded-2xl rounded-bl-md">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+        {/* Render streaming message */}
+        {streamingMessage && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] p-3 rounded-lg bg-white border border-gray-200 text-gray-800">
+              <div className="text-sm leading-relaxed">
+                {renderTextWithLinks(streamingMessage)}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      
-      {/* Invisible element for scroll management */}
-      <div ref={messagesEndRef} />
-    </div>
+        )}
+
+        {/* Typing indicator */}
+        {isTyping && !streamingMessage && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-gray-200 rounded-lg p-3">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Suggested questions */}
+        {showQuestions && messages.length <= 1 && (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600 font-medium">Suggested questions:</p>
+            {suggestedQuestions.map((question, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="text-left h-auto p-3 whitespace-normal border-gray-200 hover:border-[#0077FF] hover:text-[#0077FF] text-sm"
+                onClick={() => onQuestionClick(question)}
+              >
+                {question}
+              </Button>
+            ))}
+          </div>
+        )}
+      </div>
+    </ScrollArea>
   );
 };
 
