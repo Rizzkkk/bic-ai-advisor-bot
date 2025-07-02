@@ -35,18 +35,6 @@ interface ChatWindowProps {
   onQuestionClick: (question: string) => void;
   /** Whether the widget is in embedded mode */
   isEmbedded?: boolean;
-  /** Voice-related props */
-  voiceMode?: boolean;
-  isRecording?: boolean;
-  isProcessingVoice?: boolean;
-  onStartRecording?: () => void;
-  onStopRecording?: () => void;
-  onToggleVoiceMode?: () => void;
-  onPlayAudio?: (messageId: string, text: string) => void;
-  onPauseAudio?: () => void;
-  onShowVoiceSettings?: () => void;
-  playingMessageId?: string | null;
-  isPlaying?: boolean;
 }
 
 /**
@@ -67,18 +55,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onClose,
   onSendMessage,
   onQuestionClick,
-  isEmbedded = false,
-  voiceMode = false,
-  isRecording = false,
-  isProcessingVoice = false,
-  onStartRecording = () => {},
-  onStopRecording = () => {},
-  onToggleVoiceMode = () => {},
-  onPlayAudio = () => {},
-  onPauseAudio = () => {},
-  onShowVoiceSettings = () => {},
-  playingMessageId = null,
-  isPlaying = false
+  isEmbedded = false
 }) => {
   // Dynamic class names for chat window positioning and animations
   const chatWindowClass = isEmbedded 
@@ -93,14 +70,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         removeBackground={true} 
         className={`h-full overflow-hidden flex flex-col ${isEmbedded ? 'embedded-chat-window' : 'chat-window'}`}
       >
-        {/* Chat header with close control and voice toggle */}
+        {/* Chat header with close control */}
         <ChatHeader
           isMinimized={false}
           onMinimize={onMinimize}
           onClose={onClose}
           isEmbedded={isEmbedded}
-          voiceMode={voiceMode}
-          onToggleVoiceMode={onToggleVoiceMode}
         />
 
         {/* Messages and input */}
@@ -110,20 +85,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           isTyping={isTyping}
           showQuestions={showQuestions}
           onQuestionClick={onQuestionClick}
-          onPlayAudio={onPlayAudio}
-          onPauseAudio={onPauseAudio}
-          playingMessageId={playingMessageId}
-          isPlaying={isPlaying}
         />
         <ChatInput
           isLoading={isLoading}
           onSendMessage={onSendMessage}
-          voiceMode={voiceMode}
-          isRecording={isRecording}
-          isProcessingVoice={isProcessingVoice}
-          onStartRecording={onStartRecording}
-          onStopRecording={onStopRecording}
-          onShowVoiceSettings={onShowVoiceSettings}
         />
       </Card>
     </div>

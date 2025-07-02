@@ -1,3 +1,4 @@
+
 /**
  * Type Definitions for Chat Components
  * This file contains TypeScript interface and type definitions used across the chatbot's UI components.
@@ -27,21 +28,4 @@ export interface Message {
 export interface BICChatbotProps {
   /** Optional API key for authentication with the chat service */
   apiKey?: string;
-}
-
-/**
- * Voice-related state and settings
- */
-export interface VoiceState {
-  isRecording: boolean;
-  isProcessing: boolean;
-  isPlaying: boolean;
-  voiceMode: boolean;
-}
-
-export interface VoiceSettings {
-  voice: string;
-  speed: number;
-  autoPlay: boolean;
-  pushToTalk: boolean;
 }

@@ -1,11 +1,11 @@
 
 /**
  * ChatHeader Component
- * Displays the header section of the chat window with title, minimize/close buttons, and voice toggle
+ * Displays the header section of the chat window with title, minimize/close buttons
  */
 
 import React from 'react';
-import { X, Minus, Mic, MicOff } from 'lucide-react';
+import { X, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -21,10 +21,6 @@ interface ChatHeaderProps {
   onClose: () => void;
   /** Whether the widget is in embedded mode */
   isEmbedded?: boolean;
-  /** Whether voice mode is enabled */
-  voiceMode?: boolean;
-  /** Callback to toggle voice mode */
-  onToggleVoiceMode?: () => void;
 }
 
 /**
@@ -37,9 +33,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isMinimized,
   onMinimize,
   onClose,
-  isEmbedded = false,
-  voiceMode = false,
-  onToggleVoiceMode = () => {}
+  isEmbedded = false
 }) => {
   return (
     <div className="flex items-center justify-between p-4 border-b bg-white">
@@ -56,25 +50,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
       {/* Header controls */}
       <div className="flex items-center space-x-2">
-        {/* Voice mode toggle */}
-        <Button
-          onClick={onToggleVoiceMode}
-          variant="ghost"
-          size="sm"
-          className={`w-8 h-8 p-0 rounded-full transition-colors ${
-            voiceMode 
-              ? 'bg-[#0077FF] text-white hover:bg-[#0066CC]' 
-              : 'hover:bg-gray-100'
-          }`}
-          title={voiceMode ? 'Disable voice mode' : 'Enable voice mode'}
-        >
-          {voiceMode ? (
-            <Mic className="w-4 h-4" />
-          ) : (
-            <MicOff className="w-4 h-4" />
-          )}
-        </Button>
-
         {/* Minimize/Close buttons - only show in non-embedded mode */}
         {!isEmbedded && (
           <>

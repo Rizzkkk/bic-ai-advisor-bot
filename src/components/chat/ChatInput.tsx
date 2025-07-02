@@ -1,10 +1,8 @@
 
 import React, { useRef } from 'react';
-import { Send, Loader, Settings } from 'lucide-react';
+import { Send, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import VoiceInput from './VoiceInput';
-import VoiceVisualizer from './VoiceVisualizer';
 
 /**
  * Props interface for the ChatInput component
@@ -15,13 +13,6 @@ interface ChatInputProps {
   isLoading: boolean;
   /** Callback function to handle sending a new message */
   onSendMessage: (message: string) => void;
-  /** Voice-related props */
-  voiceMode?: boolean;
-  isRecording?: boolean;
-  isProcessingVoice?: boolean;
-  onStartRecording?: () => void;
-  onStopRecording?: () => void;
-  onShowVoiceSettings?: () => void;
 }
 
 /**
@@ -32,13 +23,7 @@ interface ChatInputProps {
  */
 const ChatInput: React.FC<ChatInputProps> = ({ 
   isLoading, 
-  onSendMessage,
-  voiceMode = false,
-  isRecording = false,
-  isProcessingVoice = false,
-  onStartRecording = () => {},
-  onStopRecording = () => {},
-  onShowVoiceSettings = () => {}
+  onSendMessage
 }) => {
   // Reference to the input element for direct manipulation
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,17 +56,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="p-4 border-t bg-gray-50 flex-shrink-0">
-      {/* Voice visualizer */}
-      {voiceMode && (isRecording || isProcessingVoice) && (
-        <div className="flex justify-center mb-2">
-          <VoiceVisualizer 
-            isRecording={isRecording} 
-            isPlaying={false}
-            className="h-12"
-          />
-        </div>
-      )}
-
       {/* Input field and controls container */}
       <div className="flex space-x-2 mb-3 items-end">
         <Input
@@ -91,28 +65,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
           disabled={isLoading}
         />
-        
-        {/* Voice controls (only show in voice mode) */}
-        {voiceMode && (
-          <div className="flex space-x-1">
-            <VoiceInput
-              isRecording={isRecording}
-              isProcessing={isProcessingVoice}
-              onStartRecording={onStartRecording}
-              onStopRecording={onStopRecording}
-              disabled={isLoading}
-            />
-            <Button
-              onClick={onShowVoiceSettings}
-              variant="ghost"
-              size="sm"
-              className="w-9 h-9 p-0 rounded-full hover:bg-gray-100"
-              title="Voice settings"
-            >
-              <Settings className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
         
         <Button
           onClick={handleSend}

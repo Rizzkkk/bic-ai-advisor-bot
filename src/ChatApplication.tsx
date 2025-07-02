@@ -10,10 +10,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { OpenAIService, createSystemPrompt, type ChatMessage } from '@/utils/openaiService';
-import { useVoiceChat } from '@/hooks/useVoiceChat';
 import ChatBubble from './components/chat/ChatBubble';
 import ChatWindow from './components/chat/ChatWindow';
-import VoiceSettings from './components/chat/VoiceSettings';
 import { Message, BICChatbotProps } from './components/chat/types';
 
 /**
@@ -33,21 +31,6 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isEmbedded, setIsEmbedded] = useState(false);
   const [hasWelcomed, setHasWelcomed] = useState(false);
-
-  // Voice functionality using custom hook
-  const {
-    voiceState,
-    playingMessageId,
-    showVoiceSettings,
-    setShowVoiceSettings,
-    handleStartRecording,
-    handleStopRecording,
-    handlePlayAudio,
-    handlePauseAudio,
-    toggleVoiceMode,
-    updateVoiceSettings,
-    getVoiceSettings
-  } = useVoiceChat(sendMessage);
 
   /**
    * Effect to check if we're in embedded mode and handle initial state
@@ -93,19 +76,6 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
       setHasWelcomed(true);
     }
   }, [isOpen, messages.length, hasWelcomed]);
-
-  /**
-   * Handle voice message sending after AI response
-   */
-  useEffect(() => {
-    if (voiceState.voiceMode && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant' && !isLoading) {
-        // Auto-play the latest AI response if voice mode is enabled
-        handlePlayAudio(lastMessage.id, lastMessage.content);
-      }
-    }
-  }, [messages, isLoading, voiceState.voiceMode, handlePlayAudio]);
 
   /**
    * Handles sending messages to the AI service through Supabase Edge Functions
@@ -261,28 +231,8 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
           onSendMessage={sendMessage}
           onQuestionClick={handleQuestionClick}
           isEmbedded={isEmbedded}
-          // Voice-related props
-          voiceMode={voiceState.voiceMode}
-          isRecording={voiceState.isRecording}
-          isProcessingVoice={voiceState.isProcessing}
-          onStartRecording={handleStartRecording}
-          onStopRecording={handleStopRecording}
-          onToggleVoiceMode={toggleVoiceMode}
-          onPlayAudio={handlePlayAudio}
-          onPauseAudio={handlePauseAudio}
-          onShowVoiceSettings={() => setShowVoiceSettings(true)}
-          playingMessageId={playingMessageId}
-          isPlaying={voiceState.isPlaying}
         />
       )}
-
-      {/* Voice Settings Modal */}
-      <VoiceSettings
-        isOpen={showVoiceSettings}
-        onClose={() => setShowVoiceSettings(false)}
-        settings={getVoiceSettings()}
-        onUpdateSettings={updateVoiceSettings}
-      />
     </div>
   );
 };
