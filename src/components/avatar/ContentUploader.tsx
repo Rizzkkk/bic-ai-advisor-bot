@@ -31,7 +31,7 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
       const text = await file.text();
       
       const { data, error } = await supabase
-        .from('content_sources')
+        .from('content_sources' as any)
         .insert([{
           name: formData.name || file.name,
           type: formData.type,
@@ -47,7 +47,9 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
 
       if (error) throw error;
 
-      onUploadComplete?.(data.id);
+      if (data) {
+        onUploadComplete?.(data.id);
+      }
       setFormData({ name: '', type: 'document', sourceUrl: '', content: '' });
       
     } catch (error) {
@@ -63,7 +65,7 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
     setUploading(true);
     try {
       const { data, error } = await supabase
-        .from('content_sources')
+        .from('content_sources' as any)
         .insert([{
           name: formData.name,
           type: formData.type,
@@ -79,7 +81,9 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
 
       if (error) throw error;
 
-      onUploadComplete?.(data.id);
+      if (data) {
+        onUploadComplete?.(data.id);
+      }
       setFormData({ name: '', type: 'document', sourceUrl: '', content: '' });
       
     } catch (error) {

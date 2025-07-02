@@ -35,6 +35,12 @@ interface ChatWindowProps {
   onQuestionClick: (question: string) => void;
   /** Whether the widget is in embedded mode */
   isEmbedded?: boolean;
+  /** Avatar mode state */
+  isAvatarMode?: boolean;
+  /** Avatar mode toggle callback */
+  onAvatarToggle?: (enabled: boolean) => void;
+  /** Context sources for current response */
+  contextSources?: string[];
 }
 
 /**
@@ -55,7 +61,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onClose,
   onSendMessage,
   onQuestionClick,
-  isEmbedded = false
+  isEmbedded = false,
+  isAvatarMode = false,
+  onAvatarToggle,
+  contextSources = []
 }) => {
   // Dynamic class names for chat window positioning and animations
   const chatWindowClass = isEmbedded 
@@ -76,6 +85,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           onMinimize={onMinimize}
           onClose={onClose}
           isEmbedded={isEmbedded}
+          isAvatarMode={isAvatarMode}
+          onAvatarToggle={onAvatarToggle}
         />
 
         {/* Messages and input */}

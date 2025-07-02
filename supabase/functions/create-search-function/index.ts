@@ -18,41 +18,59 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
+    // First check if pgvector extension is installed
+    const { data: extensions, error: extError } = await supabase
+      .from('pg_extension')
+      .select('extname')
+      .eq('extname', 'vector');
+
+    if (extError || !extensions?.length) {
+      // Install pgvector extension
+      const { error: installError } = await supabase.rpc('exec', {
+        sql: 'CREATE EXTENSION IF NOT EXISTS vector;'
+      });
+      if (installError) {
+        console.error('Error installing pgvector:', installError);
+      }
+    }
+
     // Create the search function in the database
-    const { error } = await supabase.rpc('exec_sql', {
-      sql: `
-        CREATE OR REPLACE FUNCTION search_content_chunks(
-          query_embedding vector(3072),
-          match_threshold float DEFAULT 0.7,
-          match_count int DEFAULT 5
-        )
-        RETURNS TABLE (
-          id uuid,
-          content text,
-          domain text,
-          similarity float,
-          source_id uuid,
-          metadata jsonb
-        )
-        LANGUAGE plpgsql
-        AS $$
-        BEGIN
-          RETURN QUERY
-          SELECT
-            cc.id,
-            cc.content,
-            cc.domain,
-            1 - (cc.embedding <=> query_embedding) as similarity,
-            cc.source_id,
-            cc.metadata
-          FROM content_chunks cc
-          WHERE cc.embedding IS NOT NULL
-            AND 1 - (cc.embedding <=> query_embedding) > match_threshold
-          ORDER BY cc.embedding <=> query_embedding
-          LIMIT match_count;
-        END;
-        $$;
-      `
+    const searchFunctionSQL = `
+      CREATE OR REPLACE FUNCTION search_content_chunks(
+        query_embedding vector(3072),
+        match_threshold float DEFAULT 0.7,
+        match_count int DEFAULT 5
+      )
+      RETURNS TABLE (
+        id uuid,
+        content text,
+        domain text,
+        similarity float,
+        source_id uuid,
+        metadata jsonb
+      )
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+        RETURN QUERY
+        SELECT
+          cc.id,
+          cc.content,
+          cc.domain,
+          1 - (cc.embedding <=> query_embedding) as similarity,
+          cc.source_id,
+          cc.metadata
+        FROM content_chunks cc
+        WHERE cc.embedding IS NOT NULL
+          AND 1 - (cc.embedding <=> query_embedding) > match_threshold
+        ORDER BY cc.embedding <=> query_embedding
+        LIMIT match_count;
+      END;
+      $$;
+    `;
+
+    const { error } = await supabase.rpc('exec', {
+      sql: searchFunctionSQL
     });
 
     if (error) {

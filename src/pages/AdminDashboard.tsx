@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, FileText, Settings, TrendingUp } from 'lucide-react';
 import ContentUploader from '@/components/avatar/ContentUploader';
 import ContentManager from '@/components/avatar/ContentManager';
+import Navigation from '@/components/Navigation';
 
 const AdminDashboard: React.FC = () => {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
@@ -21,7 +22,8 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
+      <Navigation />
+      <div className="max-w-7xl mx-auto pt-16">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">AI Avatar Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Manage Bibhrajit's content and monitor AI Avatar performance</p>

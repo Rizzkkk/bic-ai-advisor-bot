@@ -32,7 +32,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onSourceSelect }) => {
   const loadSources = async () => {
     try {
       const { data, error } = await supabase
-        .from('content_sources')
+        .from('content_sources' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -70,7 +70,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onSourceSelect }) => {
     try {
       // First get the chunks for this source
       const { data: chunks, error: chunksError } = await supabase
-        .from('content_chunks')
+        .from('content_chunks' as any)
         .select('*')
         .eq('source_id', sourceId)
         .is('embedding', null);
@@ -98,7 +98,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onSourceSelect }) => {
 
     try {
       const { error } = await supabase
-        .from('content_sources')
+        .from('content_sources' as any)
         .delete()
         .eq('id', sourceId);
 
