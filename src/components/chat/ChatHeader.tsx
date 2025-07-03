@@ -33,10 +33,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
         <div>
           <h3 className="font-semibold text-gray-900">
-            {isAvatarMode ? 'Bibhrajit AI Avatar' : 'BIC AI Assistant'}
+            {isAvatarMode ? 'Bibhrajit Halder AI' : 'BIC AI Assistant'}
           </h3>
           <p className="text-xs text-gray-500">
-            {isAvatarMode ? 'Powered by personal knowledge base' : 'AI, Robotics & Autonomy Expert'}
+            {isAvatarMode ? 'Managing Partner • RAG Enhanced' : 'AI Investment Expert'}
           </p>
         </div>
       </div>

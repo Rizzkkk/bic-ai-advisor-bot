@@ -31,6 +31,14 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const [isAvatarMode, setIsAvatarMode] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [contextSources, setContextSources] = useState<string[]>([]);
+  
+  // Voice settings state
+  const [voiceSettings, setVoiceSettings] = useState({
+    voice: 'nova',
+    speed: 1.0,
+    autoPlay: false,
+    pushToTalk: false
+  });
 
   /**
    * Effect to check if we're in embedded mode and handle initial state
@@ -272,15 +280,15 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     setIsAvatarMode(enabled);
     
     // Update welcome message based on mode
-    if (enabled && messages.length === 1) {
+    if (enabled && messages.length <= 1) {
       const avatarWelcomeMessage: Message = {
         id: Date.now().toString(),
-        content: "Hi! I'm Bibhrajit Halder, CEO of BIC. I help AI, robotics, and autonomy founders raise capital and scale their companies. Drawing from my experience in the field, what can I help you with today?",
+        content: "Hi! I'm Bibhrajit Halder, managing partner at BIC. I help founders in AI, robotics, and autonomy raise capital and scale their companies. Drawing from my experience in M&A, fundraising, and strategic consulting, what can I help you with today?",
         role: 'assistant',
         timestamp: new Date()
       };
       setMessages([avatarWelcomeMessage]);
-    } else if (!enabled && messages.length === 1) {
+    } else if (!enabled && messages.length <= 1) {
       const standardWelcomeMessage: Message = {
         id: Date.now().toString(),
         content: "Hi! Welcome to BIC! We help AI, robotics, and autonomy founders raise capital and scale their companies. What can we help you today?",

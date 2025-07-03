@@ -31,8 +31,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onSourceSelect }) => {
 
   const loadSources = async () => {
     try {
-      const { data, error } = await supabase
-        .from('content_sources' as any)
+      const { data, error } = await (supabase as any)
+        .from('content_sources')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -69,8 +69,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onSourceSelect }) => {
     
     try {
       // First get the chunks for this source
-      const { data: chunks, error: chunksError } = await supabase
-        .from('content_chunks' as any)
+      const { data: chunks, error: chunksError } = await (supabase as any)
+        .from('content_chunks')
         .select('*')
         .eq('source_id', sourceId)
         .is('embedding', null);
@@ -97,8 +97,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onSourceSelect }) => {
     if (!confirm('Are you sure you want to delete this content source?')) return;
 
     try {
-      const { error } = await supabase
-        .from('content_sources' as any)
+      const { error } = await (supabase as any)
+        .from('content_sources')
         .delete()
         .eq('id', sourceId);
 
