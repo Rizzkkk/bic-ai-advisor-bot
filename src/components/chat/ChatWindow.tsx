@@ -100,6 +100,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         <ChatInput
           isLoading={isLoading}
           onSendMessage={onSendMessage}
+          isAvatarMode={isAvatarMode}
         />
       </Card>
     </div>

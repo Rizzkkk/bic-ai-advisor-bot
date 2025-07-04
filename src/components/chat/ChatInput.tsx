@@ -1,8 +1,10 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Send, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import VoiceInput from './VoiceInput';
+import { AudioRecorder } from '@/utils/AudioRecorder';
 
 /**
  * Props interface for the ChatInput component
@@ -13,6 +15,8 @@ interface ChatInputProps {
   isLoading: boolean;
   /** Callback function to handle sending a new message */
   onSendMessage: (message: string) => void;
+  /** Whether voice input is enabled (Avatar mode) */
+  isAvatarMode?: boolean;
 }
 
 /**
@@ -23,10 +27,16 @@ interface ChatInputProps {
  */
 const ChatInput: React.FC<ChatInputProps> = ({ 
   isLoading, 
-  onSendMessage
+  onSendMessage,
+  isAvatarMode = false
 }) => {
   // Reference to the input element for direct manipulation
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Voice input state
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+  const [audioRecorder, setAudioRecorder] = useState<AudioRecorder | null>(null);
 
   /**
    * Handles sending a message when the send button is clicked
@@ -54,6 +64,63 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
+  /**
+   * Start voice recording
+   */
+  const handleStartRecording = async () => {
+    try {
+      setIsRecording(true);
+      const recorder = new AudioRecorder();
+      await recorder.startRecording();
+      setAudioRecorder(recorder);
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      setIsRecording(false);
+    }
+  };
+
+  /**
+   * Stop voice recording and process speech-to-text
+   */
+  const handleStopRecording = async () => {
+    if (!audioRecorder) return;
+
+    try {
+      setIsProcessingVoice(true);
+      const audioBlob = await audioRecorder.stopRecording();
+      
+      // Convert to base64 for edge function
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      
+      // Send to speech-to-text edge function  
+      const response = await fetch('https://oxvzrchcfzmaoftronkm.supabase.co/functions/v1/speech-to-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ audio: base64Audio }),
+      });
+
+      const result = await response.json();
+      
+      if (result.text) {
+        // Set the transcribed text in the input field
+        if (inputRef.current) {
+          inputRef.current.value = result.text;
+        }
+        // Optionally auto-send the message
+        onSendMessage(result.text);
+      }
+    } catch (error) {
+      console.error('Failed to process voice input:', error);
+    } finally {
+      setIsRecording(false);
+      setIsProcessingVoice(false);
+      setAudioRecorder(null);
+    }
+  };
+
   return (
     <div className="p-4 border-t bg-gray-50 flex-shrink-0">
       {/* Input field and controls container */}
@@ -61,10 +128,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <Input
           ref={inputRef}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about AI startups, funding, or strategy..."
+          placeholder={isAvatarMode ? "Ask Bibhrajit about business strategy, fundraising, or leadership..." : "Ask about AI startups, funding, or strategy..."}
           className="flex-1 border-gray-200 focus:border-[#0077FF] rounded-full text-sm"
           disabled={isLoading}
         />
+        
+        {/* Voice Input - only show in Avatar mode */}
+        {isAvatarMode && (
+          <VoiceInput
+            isRecording={isRecording}
+            isProcessing={isProcessingVoice}
+            onStartRecording={handleStartRecording}
+            onStopRecording={handleStopRecording}
+            disabled={isLoading}
+          />
+        )}
         
         <Button
           onClick={handleSend}

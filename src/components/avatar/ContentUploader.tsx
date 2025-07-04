@@ -30,12 +30,14 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
     try {
       const text = await file.text();
       
+      // Insert content source
       const { data, error } = await (supabase as any)
         .from('content_sources')
         .insert([{
           name: formData.name || file.name,
           type: formData.type,
           raw_content: text,
+          status: 'uploaded',
           metadata: {
             original_filename: file.name,
             file_size: file.size,
@@ -47,7 +49,28 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
 
       if (error) throw error;
 
+      // Trigger content processing pipeline
       if (data) {
+        // Process content (chunking)
+        const processResponse = await supabase.functions.invoke('process-content', {
+          body: { sourceId: data.id }
+        });
+
+        if (processResponse.error) {
+          console.error('Processing error:', processResponse.error);
+        } else {
+          // Generate embeddings for the chunks
+          const embeddingResponse = await supabase.functions.invoke('generate-embeddings', {
+            body: { chunks: processResponse.data.chunks }
+          });
+
+          if (embeddingResponse.error) {
+            console.error('Embedding error:', embeddingResponse.error);
+          } else {
+            console.log('Content fully processed with embeddings');
+          }
+        }
+
         onUploadComplete?.(data.id);
       }
       setFormData({ name: '', type: 'document', sourceUrl: '', content: '' });
@@ -64,6 +87,7 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
 
     setUploading(true);
     try {
+      // Insert content source
       const { data, error } = await (supabase as any)
         .from('content_sources')
         .insert([{
@@ -71,6 +95,7 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
           type: formData.type,
           source_url: formData.sourceUrl || null,
           raw_content: formData.content,
+          status: 'uploaded',
           metadata: {
             input_method: uploadMode,
             created_via: 'manual_input'
@@ -81,7 +106,28 @@ const ContentUploader: React.FC<ContentUploaderProps> = ({ onUploadComplete }) =
 
       if (error) throw error;
 
+      // Trigger content processing pipeline
       if (data) {
+        // Process content (chunking)
+        const processResponse = await supabase.functions.invoke('process-content', {
+          body: { sourceId: data.id }
+        });
+
+        if (processResponse.error) {
+          console.error('Processing error:', processResponse.error);
+        } else {
+          // Generate embeddings for the chunks
+          const embeddingResponse = await supabase.functions.invoke('generate-embeddings', {
+            body: { chunks: processResponse.data.chunks }
+          });
+
+          if (embeddingResponse.error) {
+            console.error('Embedding error:', embeddingResponse.error);
+          } else {
+            console.log('Content fully processed with embeddings');
+          }
+        }
+
         onUploadComplete?.(data.id);
       }
       setFormData({ name: '', type: 'document', sourceUrl: '', content: '' });

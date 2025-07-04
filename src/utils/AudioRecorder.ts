@@ -1,75 +1,111 @@
+/**
+ * AudioRecorder utility for recording audio from microphone
+ * Used for speech-to-text functionality in Avatar mode
+ */
 
 export class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
-  private audioChunks: Blob[] = [];
   private stream: MediaStream | null = null;
-  private onDataAvailable: (audioBlob: Blob) => void;
-  private onError: (error: Error) => void;
+  private audioChunks: Blob[] = [];
 
-  constructor(
-    onDataAvailable: (audioBlob: Blob) => void,
-    onError: (error: Error) => void
-  ) {
-    this.onDataAvailable = onDataAvailable;
-    this.onError = onError;
-  }
-
+  /**
+   * Start recording audio from microphone
+   */
   async startRecording(): Promise<void> {
     try {
+      // Request microphone access
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 16000,
+          sampleRate: 44100,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true,
+          autoGainControl: true
         }
       });
 
+      // Create MediaRecorder
       this.mediaRecorder = new MediaRecorder(this.stream, {
-        mimeType: 'audio/webm'
+        mimeType: 'audio/webm;codecs=opus'
       });
 
+      // Clear previous chunks
       this.audioChunks = [];
 
+      // Handle data available event
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
         }
       };
 
-      this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        this.onDataAvailable(audioBlob);
-        this.cleanup();
-      };
-
-      this.mediaRecorder.onerror = (event) => {
-        this.onError(new Error('Recording failed'));
-        this.cleanup();
-      };
-
+      // Start recording
       this.mediaRecorder.start();
+      console.log('Recording started');
     } catch (error) {
-      this.onError(error as Error);
+      console.error('Error starting recording:', error);
+      throw error;
     }
   }
 
-  stopRecording(): void {
-    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+  /**
+   * Stop recording and return audio blob
+   */
+  async stopRecording(): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      if (!this.mediaRecorder) {
+        reject(new Error('No active recording'));
+        return;
+      }
+
+      this.mediaRecorder.onstop = () => {
+        // Create final audio blob
+        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        
+        // Cleanup
+        this.cleanup();
+        
+        resolve(audioBlob);
+      };
+
+      this.mediaRecorder.onerror = (error) => {
+        console.error('Recording error:', error);
+        this.cleanup();
+        reject(error);
+      };
+
+      // Stop recording
       this.mediaRecorder.stop();
-    }
+      console.log('Recording stopped');
+    });
   }
 
+  /**
+   * Check if currently recording
+   */
+  isRecording(): boolean {
+    return this.mediaRecorder?.state === 'recording';
+  }
+
+  /**
+   * Cleanup resources
+   */
   private cleanup(): void {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
     }
     this.mediaRecorder = null;
+    this.audioChunks = [];
   }
 
-  isRecording(): boolean {
-    return this.mediaRecorder?.state === 'recording';
+  /**
+   * Cancel recording without returning audio
+   */
+  cancelRecording(): void {
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      this.mediaRecorder.stop();
+    }
+    this.cleanup();
   }
 }

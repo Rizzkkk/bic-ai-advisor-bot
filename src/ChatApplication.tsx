@@ -10,6 +10,7 @@ import ChatBubble from './components/chat/ChatBubble';
 import ChatWindow from './components/chat/ChatWindow';
 import { Message, BICChatbotProps } from './components/chat/types';
 import { supabase } from '@/integrations/supabase/client';
+import { TTSService, type TTSSettings } from '@/utils/TTSService';
 
 /**
  * Enhanced ChatApplication Component
@@ -33,12 +34,14 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const [contextSources, setContextSources] = useState<string[]>([]);
   
   // Voice settings state
-  const [voiceSettings, setVoiceSettings] = useState({
+  const [voiceSettings, setVoiceSettings] = useState<TTSSettings>({
     voice: 'nova',
     speed: 1.0,
-    autoPlay: false,
-    pushToTalk: false
+    autoPlay: true
   });
+
+  // TTS service instance
+  const [ttsService] = useState(() => new TTSService());
 
   /**
    * Effect to check if we're in embedded mode and handle initial state
@@ -174,6 +177,15 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, assistantMessage]);
+
+          // Auto-play TTS in Avatar mode
+          if (isAvatarMode && voiceSettings.autoPlay) {
+            try {
+              await ttsService.speak(fullResponse.trim(), voiceSettings);
+            } catch (error) {
+              console.error('TTS playback failed:', error);
+            }
+          }
         }
 
       } else {
@@ -216,6 +228,15 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, assistantMessage]);
+
+          // Auto-play TTS in Avatar mode
+          if (isAvatarMode && voiceSettings.autoPlay) {
+            try {
+              await ttsService.speak(fullResponse.trim(), voiceSettings);
+            } catch (error) {
+              console.error('TTS playback failed:', error);
+            }
+          }
         }
       }
 
