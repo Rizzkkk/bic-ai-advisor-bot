@@ -1,19 +1,61 @@
+
 /**
- * AudioRecorder utility for recording audio from microphone
- * Used for speech-to-text functionality in Avatar mode
+ * Enhanced AudioRecorder utility for recording audio from microphone
+ * Includes better error handling and browser compatibility
  */
 
 export class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
   private stream: MediaStream | null = null;
   private audioChunks: Blob[] = [];
+  private isSupported: boolean = false;
+
+  constructor() {
+    // Check browser support
+    this.isSupported = this.checkBrowserSupport();
+  }
+
+  /**
+   * Check if the browser supports required APIs
+   */
+  private checkBrowserSupport(): boolean {
+    return !!(
+      navigator.mediaDevices && 
+      navigator.mediaDevices.getUserMedia && 
+      window.MediaRecorder
+    );
+  }
+
+  /**
+   * Request microphone permission and check compatibility
+   */
+  async requestPermission(): Promise<boolean> {
+    if (!this.isSupported) {
+      throw new Error('Audio recording is not supported in this browser');
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // Stop immediately after permission check
+      return true;
+    } catch (error) {
+      console.error('Microphone permission denied:', error);
+      return false;
+    }
+  }
 
   /**
    * Start recording audio from microphone
    */
   async startRecording(): Promise<void> {
+    if (!this.isSupported) {
+      throw new Error('Audio recording is not supported in this browser');
+    }
+
     try {
-      // Request microphone access
+      console.log('Requesting microphone access...');
+      
+      // Request microphone access with specific constraints
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
@@ -24,9 +66,14 @@ export class AudioRecorder {
         }
       });
 
-      // Create MediaRecorder
+      console.log('Microphone access granted, setting up recorder...');
+
+      // Determine the best MIME type for this browser
+      const mimeType = this.getBestMimeType();
+      
+      // Create MediaRecorder with the supported MIME type
       this.mediaRecorder = new MediaRecorder(this.stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: mimeType
       });
 
       // Clear previous chunks
@@ -34,18 +81,54 @@ export class AudioRecorder {
 
       // Handle data available event
       this.mediaRecorder.ondataavailable = (event) => {
+        console.log('Audio data available:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
         }
       };
 
+      // Handle errors
+      this.mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+      };
+
       // Start recording
-      this.mediaRecorder.start();
-      console.log('Recording started');
+      this.mediaRecorder.start(100); // Collect data every 100ms
+      console.log('Recording started with MIME type:', mimeType);
     } catch (error) {
       console.error('Error starting recording:', error);
-      throw error;
+      this.cleanup();
+      
+      if (error.name === 'NotAllowedError') {
+        throw new Error('Microphone access denied. Please allow microphone access and try again.');
+      } else if (error.name === 'NotFoundError') {
+        throw new Error('No microphone found. Please connect a microphone and try again.');
+      } else {
+        throw new Error('Failed to start recording: ' + error.message);
+      }
     }
+  }
+
+  /**
+   * Get the best supported MIME type for recording
+   */
+  private getBestMimeType(): string {
+    const mimeTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+      'audio/wav'
+    ];
+
+    for (const mimeType of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        return mimeType;
+      }
+    }
+
+    // Fallback to default if none are explicitly supported
+    return 'audio/webm';
   }
 
   /**
@@ -58,17 +141,33 @@ export class AudioRecorder {
         return;
       }
 
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Recording stop timeout'));
+      }, 5000); // 5 second timeout
+
       this.mediaRecorder.onstop = () => {
-        // Create final audio blob
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        clearTimeout(timeoutId);
         
-        // Cleanup
-        this.cleanup();
-        
-        resolve(audioBlob);
+        try {
+          // Create final audio blob
+          const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
+          const audioBlob = new Blob(this.audioChunks, { type: mimeType });
+          
+          console.log('Recording stopped, created blob:', audioBlob.size, 'bytes, type:', mimeType);
+          
+          // Cleanup
+          this.cleanup();
+          
+          resolve(audioBlob);
+        } catch (error) {
+          console.error('Error creating audio blob:', error);
+          this.cleanup();
+          reject(error);
+        }
       };
 
       this.mediaRecorder.onerror = (error) => {
+        clearTimeout(timeoutId);
         console.error('Recording error:', error);
         this.cleanup();
         reject(error);
@@ -76,7 +175,7 @@ export class AudioRecorder {
 
       // Stop recording
       this.mediaRecorder.stop();
-      console.log('Recording stopped');
+      console.log('Stopping recording...');
     });
   }
 
@@ -88,11 +187,22 @@ export class AudioRecorder {
   }
 
   /**
+   * Get recording duration in seconds
+   */
+  getRecordingDuration(): number {
+    // This would need to be tracked separately if needed
+    return 0;
+  }
+
+  /**
    * Cleanup resources
    */
   private cleanup(): void {
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Stopped audio track');
+      });
       this.stream = null;
     }
     this.mediaRecorder = null;
@@ -107,5 +217,17 @@ export class AudioRecorder {
       this.mediaRecorder.stop();
     }
     this.cleanup();
+    console.log('Recording cancelled');
+  }
+
+  /**
+   * Check if the browser supports audio recording
+   */
+  static isSupported(): boolean {
+    return !!(
+      navigator.mediaDevices && 
+      navigator.mediaDevices.getUserMedia && 
+      window.MediaRecorder
+    );
   }
 }

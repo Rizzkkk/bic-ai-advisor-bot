@@ -1,14 +1,45 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import AdminAuth from '@/components/auth/AdminAuth';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, FileText, Settings, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BarChart, FileText, Settings, TrendingUp, LogOut, Shield } from 'lucide-react';
 import ContentUploader from '@/components/avatar/ContentUploader';
 import ContentManager from '@/components/avatar/ContentManager';
 import Navigation from '@/components/Navigation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const AdminDashboard: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const adminSession = localStorage.getItem('admin_session');
+    const sessionExpiry = localStorage.getItem('admin_session_expiry');
+    
+    if (adminSession && sessionExpiry) {
+      const now = new Date().getTime();
+      const expiry = parseInt(sessionExpiry);
+      
+      if (now < expiry) {
+        setIsAuthenticated(true);
+      } else {
+        handleLogout();
+      }
+    }
+  }, []);
+
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_session');
+    localStorage.removeItem('admin_session_expiry');
+    setIsAuthenticated(false);
+  };
 
   const handleUploadComplete = (sourceId: string) => {
     console.log('Content uploaded:', sourceId);
@@ -20,14 +51,41 @@ const AdminDashboard: React.FC = () => {
     // Could open a detailed view or processing panel
   };
 
+  // Show authentication screen if not authenticated
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthenticated={handleAuthenticated} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <Navigation />
       <div className="max-w-7xl mx-auto pt-16">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">AI Avatar Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage Bibhrajit's content and monitor AI Avatar performance</p>
+        {/* Admin Header with Security Warning */}
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-6 h-6 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-900">AI Avatar Admin Dashboard</h1>
+            </div>
+            <p className="text-gray-600">Manage Bibhrajit's content and monitor AI Avatar performance</p>
+          </div>
+          <Button 
+            onClick={handleLogout}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
         </div>
+
+        {/* Security Alert */}
+        <Alert className="mb-6 border-yellow-200 bg-yellow-50">
+          <Shield className="w-4 h-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800">
+            <strong>Secure Admin Session Active</strong> - Session will expire automatically after 2 hours of inactivity.
+          </AlertDescription>
+        </Alert>
 
         <Tabs defaultValue="content" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
