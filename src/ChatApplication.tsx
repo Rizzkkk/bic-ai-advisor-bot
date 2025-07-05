@@ -1,7 +1,6 @@
+
 /**
- * Enhanced ChatApplication Component with AI Avatar Integration
- * This component now includes the complete 7-phase AI Avatar implementation
- * integrating RAG, personalization, and content management capabilities.
+ * Main ChatApplication Component with AI Avatar Integration
  */
 
 import React, { useState, useEffect } from 'react';
@@ -10,14 +9,10 @@ import ChatBubble from './components/chat/ChatBubble';
 import ChatWindow from './components/chat/ChatWindow';
 import { Message, BICChatbotProps } from './components/chat/types';
 import { supabase } from '@/integrations/supabase/client';
-import { TTSService, type TTSSettings } from '@/utils/TTSService';
+import { simpleTTSService } from '@/utils/SimpleTTSService';
 
-/**
- * Enhanced ChatApplication Component
- * Now includes AI Avatar mode with RAG-powered responses from Bibhrajit's content
- */
 const ChatApplication: React.FC<BICChatbotProps> = () => {
-  // Existing state
+  // State management
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -27,41 +22,21 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isEmbedded, setIsEmbedded] = useState(false);
   const [hasWelcomed, setHasWelcomed] = useState(false);
-
-  // New Avatar-specific state
   const [isAvatarMode, setIsAvatarMode] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [contextSources, setContextSources] = useState<string[]>([]);
-  
-  // Voice settings state
-  const [voiceSettings, setVoiceSettings] = useState<TTSSettings>({
-    voice: 'nova',
-    speed: 1.0,
-    autoPlay: true
-  });
 
-  // TTS service instance
-  const [ttsService] = useState(() => new TTSService());
-
-  /**
-   * Effect to check if we're in embedded mode and handle initial state
-   */
+  // Check embedded mode
   useEffect(() => {
-    // Check if we're in an iframe or have the embedded parameter
     const isInIframe = window.self !== window.top;
     const hasEmbeddedParam = new URLSearchParams(window.location.search).get('embedded') === 'true';
     const embedded = isInIframe || hasEmbeddedParam;
     
     setIsEmbedded(embedded);
     
-    // In embedded mode, start closed and minimized
     if (embedded) {
       setIsOpen(false);
       setIsMinimized(true);
-    }
-
-    // Apply iframe-specific styles
-    if (embedded) {
       document.body.style.background = 'transparent';
       document.documentElement.style.background = 'transparent';
       document.body.style.margin = '0';
@@ -72,30 +47,27 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     }
   }, []);
 
-  /**
-   * Effect to show welcome message when chat is first opened
-   */
+  // Welcome message
   useEffect(() => {
     if (isOpen && messages.length === 0 && !hasWelcomed) {
       const welcomeMessage: Message = {
         id: Date.now().toString(),
-        content: "Hi! Welcome to BIC! We help AI, robotics, and autonomy founders raise capital and scale their companies. What can we help you today?",
+        content: isAvatarMode 
+          ? "Hi! I'm Bibhrajit Halder, managing partner at BIC. I help founders in AI, robotics, and autonomy raise capital and scale their companies. Drawing from my experience in M&A, fundraising, and strategic consulting, what can I help you with today?"
+          : "Hi! Welcome to BIC! We help AI, robotics, and autonomy founders raise capital and scale their companies. What can we help you today?",
         role: 'assistant',
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
       setHasWelcomed(true);
     }
-  }, [isOpen, messages.length, hasWelcomed]);
+  }, [isOpen, messages.length, hasWelcomed, isAvatarMode]);
 
-  /**
-   * Enhanced sendMessage function with Avatar mode support
-   * Uses either standard OpenAI or enhanced RAG-powered responses
-   */
+  // Send message function
   async function sendMessage(content: string) {
     if (!content.trim() || isLoading) return;
 
-    console.log('Starting message send with content:', content, 'Avatar mode:', isAvatarMode);
+    console.log('Sending message:', content, 'Avatar mode:', isAvatarMode);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -113,9 +85,7 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
 
     try {
       if (isAvatarMode) {
-        // Use enhanced chat completion with RAG
-        console.log('Using Avatar mode with RAG enhancement');
-        
+        // Use enhanced chat with RAG
         const recentMessages = messages.slice(-8);
         const chatMessages: ChatMessage[] = [
           ...recentMessages.map(msg => ({
@@ -179,19 +149,15 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
           setMessages(prev => [...prev, assistantMessage]);
 
           // Auto-play TTS in Avatar mode
-          if (isAvatarMode && voiceSettings.autoPlay) {
-            try {
-              await ttsService.speak(fullResponse.trim(), voiceSettings);
-            } catch (error) {
-              console.error('TTS playback failed:', error);
-            }
+          try {
+            await simpleTTSService.speak(fullResponse.trim(), 'nova');
+          } catch (error) {
+            console.error('TTS failed:', error);
           }
         }
 
       } else {
-        // Use standard OpenAI service
-        console.log('Using standard chat mode');
-        
+        // Use standard OpenAI
         const openaiService = new OpenAIService({
           model: 'gpt-4o-mini',
           temperature: 0.7,
@@ -228,20 +194,11 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, assistantMessage]);
-
-          // Auto-play TTS in Avatar mode
-          if (isAvatarMode && voiceSettings.autoPlay) {
-            try {
-              await ttsService.speak(fullResponse.trim(), voiceSettings);
-            } catch (error) {
-              console.error('TTS playback failed:', error);
-            }
-          }
         }
       }
 
     } catch (error) {
-      console.error('Error in sendMessage:', error);
+      console.error('Error sending message:', error);
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -258,49 +215,32 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
     }
   }
 
-  /**
-   * Handles clicking on suggested questions
-   * @param {string} question - The selected question
-   */
   const handleQuestionClick = (question: string) => {
     sendMessage(question);
   };
 
-  /**
-   * Handle opening the chat widget
-   */
   const handleOpenChat = () => {
     setIsOpen(true);
     setIsMinimized(false);
   };
 
-  /**
-   * Handle closing the chat widget (X button)
-   */
   const handleCloseChat = () => {
     setIsOpen(false);
     setIsMinimized(false);
     setTimeout(() => {
       setMessages([]);
       setHasWelcomed(false);
-    }, 500); // Delay reset by 500ms for a reset effect
+    }, 500);
   };
 
-  /**
-   * Minimize chat (hide window, keep messages)
-   */
   const handleMinimizeChat = () => {
     setIsOpen(false);
     setIsMinimized(true);
   };
 
-  /**
-   * Toggle between standard and Avatar modes
-   */
   const handleAvatarToggle = (enabled: boolean) => {
     setIsAvatarMode(enabled);
     
-    // Update welcome message based on mode
     if (enabled && messages.length <= 1) {
       const avatarWelcomeMessage: Message = {
         id: Date.now().toString(),
@@ -322,7 +262,6 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
 
   return (
     <div className={isEmbedded ? "h-full w-full overflow-hidden" : ""}>
-      {/* Chat bubble - show when chat is closed or minimized */}
       {(!isOpen || isMinimized) && (
         <ChatBubble 
           isOpen={isOpen}
@@ -330,7 +269,6 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
         />
       )}
       
-      {/* Main chat window - only show when open */}
       {isOpen && (
         <ChatWindow
           isOpen={isOpen}
@@ -345,7 +283,6 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
           onSendMessage={sendMessage}
           onQuestionClick={handleQuestionClick}
           isEmbedded={isEmbedded}
-          // New Avatar props
           isAvatarMode={isAvatarMode}
           onAvatarToggle={handleAvatarToggle}
           contextSources={contextSources}

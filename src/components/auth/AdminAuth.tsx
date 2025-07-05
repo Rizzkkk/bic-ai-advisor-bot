@@ -17,7 +17,7 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check for existing session on mount
+  // Check existing session
   useEffect(() => {
     const adminSession = localStorage.getItem('admin_session');
     const sessionExpiry = localStorage.getItem('admin_session_expiry');
@@ -29,7 +29,6 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
       if (now < expiry) {
         onAuthenticated();
       } else {
-        // Clear expired session
         localStorage.removeItem('admin_session');
         localStorage.removeItem('admin_session_expiry');
       }
@@ -42,14 +41,13 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
     setError('');
 
     try {
-      // Updated admin credentials
       const ADMIN_USERNAME = 'admin';
       const ADMIN_PASSWORD = 'BIC2025@Admin';
 
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        // Create session (expires in 2 hours)
+        // Create 2-hour session
         const sessionToken = btoa(`${username}:${Date.now()}`);
-        const expiryTime = new Date().getTime() + (2 * 60 * 60 * 1000); // 2 hours
+        const expiryTime = new Date().getTime() + (2 * 60 * 60 * 1000);
         
         localStorage.setItem('admin_session', sessionToken);
         localStorage.setItem('admin_session_expiry', expiryTime.toString());
