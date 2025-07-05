@@ -102,11 +102,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
           console.log('Sending audio to speech-to-text service...');
           
-          // Send to speech-to-text edge function  
+          // Send to speech-to-text edge function with proper authorization
           const response = await fetch('https://oxvzrchcfzmaoftronkm.supabase.co/functions/v1/speech-to-text', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94dnpyY2hjZnptYW9mdHJvbmttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNTA5OTAsImV4cCI6MjA2NDkyNjk5MH0.Yn4tOEWm4H5ZLNsEGAp_Q3JyP0RaaMoHnfRRX0R5vOs'}`,
             },
             body: JSON.stringify({ audio: base64Audio }),
           });

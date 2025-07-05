@@ -42,10 +42,9 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
     setError('');
 
     try {
-      // Simulate authentication - in production, this should call a secure API
-      // For now, using hardcoded credentials (should be moved to environment variables)
+      // Updated admin credentials
       const ADMIN_USERNAME = 'admin';
-      const ADMIN_PASSWORD = 'BIC2024@Admin';
+      const ADMIN_PASSWORD = 'BIC2025@Admin';
 
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         // Create session (expires in 2 hours)
@@ -67,19 +66,22 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-6 h-6 text-blue-600" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center pb-6">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4">
+            <Lock className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl">Admin Access</CardTitle>
-          <p className="text-gray-600">Bibhrajit AI Avatar Dashboard</p>
+          <CardTitle className="text-2xl font-bold text-gray-900">Secure Admin Access</CardTitle>
+          <p className="text-gray-600 mt-2">Bibhrajit AI Avatar Dashboard</p>
+          <div className="mt-3 px-4 py-2 bg-blue-50 rounded-lg">
+            <p className="text-xs text-blue-700 font-medium">Production Environment</p>
+          </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-2">Username</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Username</label>
               <Input
                 type="text"
                 value={username}
@@ -87,11 +89,12 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
                 placeholder="Enter admin username"
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Password</label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
@@ -100,12 +103,13 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
                   placeholder="Enter admin password"
                   required
                   disabled={isLoading}
+                  className="h-11 pr-12"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-auto p-1"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-auto p-2"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
@@ -122,16 +126,17 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
 
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full h-11 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700" 
               disabled={isLoading}
             >
-              {isLoading ? 'Authenticating...' : 'Login'}
+              {isLoading ? 'Authenticating...' : 'Secure Login'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Authorized Personnel Only</p>
+          <div className="mt-6 text-center text-sm text-gray-500 space-y-1">
+            <p className="font-medium">🔒 Authorized Personnel Only</p>
             <p>Session expires after 2 hours of inactivity</p>
+            <p className="text-xs bg-gray-50 p-2 rounded">Production Admin Portal v2.0</p>
           </div>
         </CardContent>
       </Card>

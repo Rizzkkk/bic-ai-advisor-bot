@@ -38,6 +38,7 @@ export class TTSService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94dnpyY2hjZnptYW9mdHJvbmttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNTA5OTAsImV4cCI6MjA2NDkyNjk5MH0.Yn4tOEWm4H5ZLNsEGAp_Q3JyP0RaaMoHnfRRX0R5vOs'}`,
         },
         body: JSON.stringify({
           text,
@@ -261,7 +262,7 @@ export class TTSService {
   }
 
   /**
-   * Get available voices with better descriptions
+   * Get available voices with better descriptions (random AI voice selected)
    */
   getAvailableVoices(): Array<{ id: string; name: string; description: string }> {
     return [
@@ -269,7 +270,7 @@ export class TTSService {
       { id: 'echo', name: 'Echo', description: 'Male, clear voice' },
       { id: 'fable', name: 'Fable', description: 'Female, warm voice' },
       { id: 'onyx', name: 'Onyx', description: 'Male, deep voice' },
-      { id: 'nova', name: 'Nova', description: 'Professional, versatile voice (Recommended for Bibhrajit)' },
+      { id: 'nova', name: 'Nova', description: 'Professional, versatile voice (Default AI Voice)' },
       { id: 'shimmer', name: 'Shimmer', description: 'Female, bright voice' },
     ];
   }
