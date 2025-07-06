@@ -1,19 +1,21 @@
 
-export class SimpleTTSService {
+export class AvatarTTS {
   private currentAudio: HTMLAudioElement | null = null;
+  private readonly apiUrl = 'https://oxvzrchcfzmaoftronkm.supabase.co/functions/v1/text-to-speech';
+  private readonly apiKey = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94dnpyY2hjZnptYW9mdHJvbmttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNTA5OTAsImV4cCI6MjA2NDkyNjk5MH0.Yn4tOEWm4H5ZLNsEGAp_Q3JyP0RaaMoHnfRRX0R5vOs';
 
   async speak(text: string, voice: string = 'nova'): Promise<void> {
     try {
-      console.log('Generating speech for:', text.substring(0, 50) + '...');
+      console.log('AvatarTTS: Generating speech for:', text.substring(0, 50) + '...');
       
       // Stop any currently playing audio
       this.stop();
 
-      const response = await fetch('https://oxvzrchcfzmaoftronkm.supabase.co/functions/v1/text-to-speech', {
+      const response = await fetch(this.apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94dnpyY2hjZnptYW9mdHJvbmttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNTA5OTAsImV4cCI6MjA2NDkyNjk5MH0.Yn4tOEWm4H5ZLNsEGAp_Q3JyP0RaaMoHnfRRX0R5vOs',
+          'Authorization': this.apiKey,
         },
         body: JSON.stringify({
           text,
@@ -24,7 +26,7 @@ export class SimpleTTSService {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'TTS failed');
+        throw new Error(errorData.error || 'TTS API failed');
       }
 
       const result = await response.json();
@@ -48,7 +50,7 @@ export class SimpleTTSService {
         };
         
         audio.onerror = (error) => {
-          console.error('Audio playback error:', error);
+          console.error('AvatarTTS: Audio playback error:', error);
           URL.revokeObjectURL(audioUrl);
           this.currentAudio = null;
         };
@@ -56,10 +58,10 @@ export class SimpleTTSService {
         this.currentAudio = audio;
         await audio.play();
         
-        console.log('TTS playback started successfully');
+        console.log('AvatarTTS: Playback started successfully');
       }
     } catch (error) {
-      console.error('TTS Error:', error);
+      console.error('AvatarTTS: Error:', error);
       throw error;
     }
   }
@@ -76,5 +78,3 @@ export class SimpleTTSService {
     return this.currentAudio !== null && !this.currentAudio.paused;
   }
 }
-
-export const simpleTTSService = new SimpleTTSService();
