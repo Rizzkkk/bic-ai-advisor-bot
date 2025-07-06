@@ -57,55 +57,68 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     const { messages, sessionId, useRAG = true } = await req.json();
     
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      throw new Error('Invalid messages format');
+    }
+
     const startTime = Date.now();
     const userQuery = messages[messages.length - 1].content;
     let retrievedChunks: string[] = [];
     let systemPrompt = BIBHRAJIT_PERSONA_PROMPT.replace('{context}', '').replace('{query}', userQuery);
 
+    console.log('Processing query:', userQuery);
+
     // RAG Pipeline: Retrieve relevant context
     if (useRAG && userQuery) {
       console.log('Starting RAG retrieval for query:', userQuery);
       
-      // Generate embedding for the user query
-      const queryEmbeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-large',
-          input: userQuery,
-          dimensions: 3072
-        }),
-      });
-
-      const queryEmbeddingData = await queryEmbeddingResponse.json();
-      
-      if (queryEmbeddingResponse.ok && queryEmbeddingData.data?.[0]?.embedding) {
-        const queryEmbedding = queryEmbeddingData.data[0].embedding;
-        
-        // Perform similarity search
-        const { data: similarChunks, error } = await supabase.rpc('search_content_chunks', {
-          query_embedding: queryEmbedding,
-          match_threshold: 0.7,
-          match_count: 5
+      try {
+        // Generate embedding for the user query
+        const queryEmbeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'text-embedding-3-large',
+            input: userQuery,
+            dimensions: 3072
+          }),
         });
 
-        if (!error && similarChunks?.length > 0) {
-          const contextChunks = similarChunks.map((chunk: any) => 
-            `[From ${chunk.domain}]: ${chunk.content}`
-          ).join('\n\n');
-          retrievedChunks = similarChunks.map((chunk: any) => chunk.id);
+        if (queryEmbeddingResponse.ok) {
+          const queryEmbeddingData = await queryEmbeddingResponse.json();
           
-          systemPrompt = BIBHRAJIT_PERSONA_PROMPT
-            .replace('{context}', contextChunks)
-            .replace('{query}', userQuery);
-          
-          console.log(`Retrieved ${similarChunks.length} relevant chunks for context`);
-        } else {
-          console.log('No relevant chunks found or error:', error);
+          if (queryEmbeddingData.data?.[0]?.embedding) {
+            const queryEmbedding = queryEmbeddingData.data[0].embedding;
+            
+            // Perform similarity search
+            const { data: similarChunks, error } = await supabase.rpc('search_content_chunks', {
+              query_embedding: queryEmbedding,
+              match_threshold: 0.7,
+              match_count: 5
+            });
+
+            if (!error && similarChunks?.length > 0) {
+              const contextChunks = similarChunks.map((chunk: any) => 
+                `[From ${chunk.domain}]: ${chunk.content}`
+              ).join('\n\n');
+              retrievedChunks = similarChunks.map((chunk: any) => chunk.id);
+              
+              systemPrompt = BIBHRAJIT_PERSONA_PROMPT
+                .replace('{context}', contextChunks)
+                .replace('{query}', userQuery);
+              
+              console.log(`Retrieved ${similarChunks.length} relevant chunks for context`);
+            } else {
+              console.log('No relevant chunks found or error:', error);
+            }
+          }
         }
+      } catch (ragError) {
+        console.error('RAG pipeline error:', ragError);
+        // Continue without RAG context
       }
     }
 
@@ -114,6 +127,8 @@ serve(async (req) => {
       { role: 'system', content: systemPrompt },
       ...messages.filter((msg: any) => msg.role !== 'system')
     ];
+
+    console.log('Sending to OpenAI with', openAIMessages.length, 'messages');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -131,8 +146,9 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`OpenAI API error: ${errorData.error?.message}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} ${errorText}`);
     }
 
     const responseTime = Date.now() - startTime;
@@ -157,14 +173,19 @@ serve(async (req) => {
                 const data = line.slice(6);
                 if (data === '[DONE]') {
                   // Log the interaction
-                  if (sessionId) {
-                    await supabase.from('avatar_interactions').insert({
-                      session_id: sessionId,
-                      user_query: userQuery,
-                      retrieved_chunks: retrievedChunks,
-                      generated_response: fullResponse,
-                      response_time_ms: responseTime
-                    });
+                  if (sessionId && fullResponse.trim()) {
+                    try {
+                      await supabase.from('avatar_interactions').insert({
+                        session_id: sessionId,
+                        user_query: userQuery,
+                        retrieved_chunks: retrievedChunks,
+                        generated_response: fullResponse.trim(),
+                        response_time_ms: responseTime
+                      });
+                      console.log('Logged interaction to database');
+                    } catch (logError) {
+                      console.error('Failed to log interaction:', logError);
+                    }
                   }
                   
                   controller.close();

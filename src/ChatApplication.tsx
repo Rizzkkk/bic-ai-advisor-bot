@@ -60,6 +60,15 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
       };
       setMessages([welcomeMessage]);
       setHasWelcomed(true);
+
+      // Auto-play welcome message in Avatar mode
+      if (isAvatarMode) {
+        setTimeout(() => {
+          simpleTTSService.speak(welcomeMessage.content, 'nova').catch(error => {
+            console.error('Welcome TTS failed:', error);
+          });
+        }, 500);
+      }
     }
   }, [isOpen, messages.length, hasWelcomed, isAvatarMode]);
 
@@ -98,19 +107,30 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
           }
         ];
 
-        const { data, error } = await supabase.functions.invoke('enhanced-chat-completion', {
-          body: { 
+        console.log('Invoking enhanced-chat-completion with:', { messages: chatMessages, sessionId, useRAG: true });
+
+        const response = await fetch('https://oxvzrchcfzmaoftronkm.supabase.co/functions/v1/enhanced-chat-completion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94dnpyY2hjZnptYW9mdHJvbmttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNTA5OTAsImV4cCI6MjA2NDkyNjk5MH0.Yn4tOEWm4H5ZLNsEGAp_Q3JyP0RaaMoHnfRRX0R5vOs',
+          },
+          body: JSON.stringify({ 
             messages: chatMessages,
             sessionId,
             useRAG: true
-          }
+          })
         });
 
-        if (error) throw error;
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Enhanced chat completion error:', response.status, errorText);
+          throw new Error(`Avatar chat failed: ${response.status}`);
+        }
 
         // Handle streaming response
         let fullResponse = '';
-        const reader = data.getReader();
+        const reader = response.body!.getReader();
         const decoder = new TextDecoder();
 
         while (true) {
@@ -148,12 +168,16 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
           };
           setMessages(prev => [...prev, assistantMessage]);
 
-          // Auto-play TTS in Avatar mode
-          try {
-            await simpleTTSService.speak(fullResponse.trim(), 'nova');
-          } catch (error) {
-            console.error('TTS failed:', error);
-          }
+          // Auto-play TTS in Avatar mode with delay to ensure message is added
+          setTimeout(async () => {
+            try {
+              console.log('Starting TTS for Avatar response...');
+              await simpleTTSService.speak(fullResponse.trim(), 'nova');
+              console.log('TTS completed successfully');
+            } catch (error) {
+              console.error('TTS failed:', error);
+            }
+          }, 100);
         }
 
       } else {
@@ -202,12 +226,21 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm having trouble connecting right now. Please reach out directly to our team at info@bicorp.ai and we'll get back to you quickly.",
+        content: isAvatarMode 
+          ? "I'm having trouble with my Avatar connection right now. Let me try switching to standard mode to help you better."
+          : "I'm having trouble connecting right now. Please reach out directly to our team at info@bicorp.ai and we'll get back to you quickly.",
         role: 'assistant',
         timestamp: new Date(),
       };
       
       setMessages(prev => [...prev, errorMessage]);
+
+      // If Avatar mode fails, suggest switching to standard mode
+      if (isAvatarMode) {
+        setTimeout(() => {
+          setIsAvatarMode(false);
+        }, 2000);
+      }
     } finally {
       setIsLoading(false);
       setIsTyping(false);
@@ -227,6 +260,8 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const handleCloseChat = () => {
     setIsOpen(false);
     setIsMinimized(false);
+    // Stop any playing audio
+    simpleTTSService.stop();
     setTimeout(() => {
       setMessages([]);
       setHasWelcomed(false);
@@ -236,28 +271,21 @@ const ChatApplication: React.FC<BICChatbotProps> = () => {
   const handleMinimizeChat = () => {
     setIsOpen(false);
     setIsMinimized(true);
+    // Stop any playing audio
+    simpleTTSService.stop();
   };
 
   const handleAvatarToggle = (enabled: boolean) => {
+    console.log('Avatar mode toggled:', enabled);
     setIsAvatarMode(enabled);
     
-    if (enabled && messages.length <= 1) {
-      const avatarWelcomeMessage: Message = {
-        id: Date.now().toString(),
-        content: "Hi! I'm Bibhrajit Halder, managing partner at BIC. I help founders in AI, robotics, and autonomy raise capital and scale their companies. Drawing from my experience in M&A, fundraising, and strategic consulting, what can I help you with today?",
-        role: 'assistant',
-        timestamp: new Date()
-      };
-      setMessages([avatarWelcomeMessage]);
-    } else if (!enabled && messages.length <= 1) {
-      const standardWelcomeMessage: Message = {
-        id: Date.now().toString(),
-        content: "Hi! Welcome to BIC! We help AI, robotics, and autonomy founders raise capital and scale their companies. What can we help you today?",
-        role: 'assistant',
-        timestamp: new Date()
-      };
-      setMessages([standardWelcomeMessage]);
-    }
+    // Stop any currently playing audio
+    simpleTTSService.stop();
+    
+    // Reset conversation for clean Avatar experience
+    setMessages([]);
+    setHasWelcomed(false);
+    setShowQuestions(true);
   };
 
   return (

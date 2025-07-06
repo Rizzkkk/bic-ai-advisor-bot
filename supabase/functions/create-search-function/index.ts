@@ -1,4 +1,5 @@
 
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
@@ -18,80 +19,65 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // First check if pgvector extension is installed
-    const { data: extensions, error: extError } = await supabase
-      .from('pg_extension')
-      .select('extname')
-      .eq('extname', 'vector');
-
-    if (extError || !extensions?.length) {
-      // Install pgvector extension
-      const { error: installError } = await supabase.rpc('exec', {
-        sql: 'CREATE EXTENSION IF NOT EXISTS vector;'
-      });
-      if (installError) {
-        console.error('Error installing pgvector:', installError);
-      }
-    }
-
-    // Create the search function in the database
-    const searchFunctionSQL = `
-      CREATE OR REPLACE FUNCTION search_content_chunks(
-        query_embedding vector(3072),
-        match_threshold float DEFAULT 0.7,
-        match_count int DEFAULT 5
-      )
-      RETURNS TABLE (
-        id uuid,
-        content text,
-        domain text,
-        similarity float,
-        source_id uuid,
-        metadata jsonb
-      )
-      LANGUAGE plpgsql
-      AS $$
-      BEGIN
-        RETURN QUERY
-        SELECT
-          cc.id,
-          cc.content,
-          cc.domain,
-          1 - (cc.embedding <=> query_embedding) as similarity,
-          cc.source_id,
-          cc.metadata
-        FROM content_chunks cc
-        WHERE cc.embedding IS NOT NULL
-          AND 1 - (cc.embedding <=> query_embedding) > match_threshold
-        ORDER BY cc.embedding <=> query_embedding
-        LIMIT match_count;
-      END;
-      $$;
-    `;
-
-    const { error } = await supabase.rpc('exec', {
-      sql: searchFunctionSQL
+    // Create the search function
+    const { error } = await supabase.rpc('exec_sql', {
+      sql: `
+        CREATE OR REPLACE FUNCTION search_content_chunks(
+          query_embedding vector(3072),
+          match_threshold float DEFAULT 0.7,
+          match_count int DEFAULT 5
+        )
+        RETURNS TABLE (
+          id uuid,
+          content text,
+          domain text,
+          source_id uuid,
+          chunk_index int,
+          token_count int,
+          metadata jsonb,
+          similarity float
+        )
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+          RETURN QUERY
+          SELECT
+            cc.id,
+            cc.content,
+            cc.domain,
+            cc.source_id,
+            cc.chunk_index,
+            cc.token_count,
+            cc.metadata,
+            (cc.embedding <=> query_embedding) * -1 AS similarity
+          FROM content_chunks cc
+          WHERE cc.embedding IS NOT NULL
+            AND (cc.embedding <=> query_embedding) < (1 - match_threshold)
+          ORDER BY cc.embedding <=> query_embedding
+          LIMIT match_count;
+        END;
+        $$;
+      `
     });
 
     if (error) {
-      throw new Error(`Failed to create search function: ${error.message}`);
+      console.error('Error creating search function:', error);
+      throw error;
     }
 
-    return new Response(JSON.stringify({ 
-      success: true,
-      message: 'Search function created successfully'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ message: 'Search function created successfully' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Error creating search function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      success: false 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Error in create-search-function:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

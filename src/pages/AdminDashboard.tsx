@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminAuth from '@/components/auth/AdminAuth';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -9,15 +8,12 @@ import ContentUploader from '@/components/avatar/ContentUploader';
 import ContentManager from '@/components/avatar/ContentManager';
 import Navigation from '@/components/Navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAvatarAnalytics } from '@/hooks/useAvatarAnalytics';
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
-  const [systemHealth, setSystemHealth] = useState({
-    database: 'online',
-    voice: 'online',
-    api: 'online'
-  });
+  const { metrics, isLoading, error, refetch } = useAvatarAnalytics();
 
   // Check authentication status on mount
   useEffect(() => {
@@ -48,12 +44,11 @@ const AdminDashboard: React.FC = () => {
 
   const handleUploadComplete = (sourceId: string) => {
     console.log('Content uploaded:', sourceId);
-    // Refresh content manager or show success message
+    refetch(); // Refresh analytics
   };
 
   const handleSourceSelect = (sourceId: string) => {
     setSelectedSource(sourceId);
-    // Could open a detailed view or processing panel
   };
 
   // Show authentication screen if not authenticated
@@ -102,6 +97,15 @@ const AdminDashboard: React.FC = () => {
             <strong>Production Environment Active</strong> - All systems operational. Session auto-expires in 2 hours.
           </AlertDescription>
         </Alert>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertDescription className="text-red-800">
+              <strong>Data Error:</strong> {error}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* System Health Dashboard */}
         <div className="grid gap-4 md:grid-cols-4 mb-6">
@@ -197,9 +201,13 @@ const AdminDashboard: React.FC = () => {
                   <TrendingUp className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-900">2,847</div>
-                  <p className="text-xs text-blue-600">+23.5% from last month</p>
-                  <div className="mt-2 text-xs text-blue-500">Live production data</div>
+                  <div className="text-2xl font-bold text-blue-900">
+                    {isLoading ? '...' : metrics.totalInteractions.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-blue-600">Live production data</p>
+                  <div className="mt-2 text-xs text-blue-500">
+                    Avg response: {isLoading ? '...' : Math.round(metrics.averageResponseTime)}ms
+                  </div>
                 </CardContent>
               </Card>
 
@@ -209,8 +217,10 @@ const AdminDashboard: React.FC = () => {
                   <FileText className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-900">127</div>
-                  <p className="text-xs text-green-600">+8 this week</p>
+                  <div className="text-2xl font-bold text-green-900">
+                    {isLoading ? '...' : metrics.contentSources}
+                  </div>
+                  <p className="text-xs text-green-600">Active knowledge base</p>
                   <div className="mt-2 text-xs text-green-500">Vector embeddings ready</div>
                 </CardContent>
               </Card>
@@ -221,9 +231,11 @@ const AdminDashboard: React.FC = () => {
                   <BarChart className="h-4 w-4 text-purple-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-900">4.8/5</div>
-                  <p className="text-xs text-purple-600">+0.3 from last month</p>
-                  <div className="mt-2 text-xs text-purple-500">Based on user feedback</div>
+                  <div className="text-2xl font-bold text-purple-900">
+                    {isLoading ? '...' : metrics.averageRating > 0 ? metrics.averageRating.toFixed(1) + '/5' : 'N/A'}
+                  </div>
+                  <p className="text-xs text-purple-600">Based on user feedback</p>
+                  <div className="mt-2 text-xs text-purple-500">Production quality</div>
                 </CardContent>
               </Card>
             </div>
@@ -233,32 +245,45 @@ const AdminDashboard: React.FC = () => {
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
                   Live Interactions Dashboard
+                  <Button 
+                    onClick={refetch} 
+                    variant="outline" 
+                    size="sm"
+                    className="ml-auto"
+                  >
+                    Refresh
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                    <div>
-                      <p className="font-medium text-blue-900">Startup fundraising strategy query</p>
-                      <p className="text-sm text-blue-700">Retrieved 4 relevant sources, 5/5 rating • Voice input used</p>
-                    </div>
-                    <div className="text-sm text-blue-600 font-medium">3 min ago</div>
+                {isLoading ? (
+                  <div className="text-center py-8">Loading live data...</div>
+                ) : metrics.recentInteractions.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No interactions yet. Try the Avatar mode to generate some data!
                   </div>
-                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    <div>
-                      <p className="font-medium text-green-900">AI market opportunities in Southeast Asia</p>
-                      <p className="text-sm text-green-700">Retrieved 3 relevant sources, 4.8/5 rating • Text input</p>
-                    </div>
-                    <div className="text-sm text-green-600 font-medium">7 min ago</div>
+                ) : (
+                  <div className="space-y-4">
+                    {metrics.recentInteractions.slice(0, 5).map((interaction, index) => (
+                      <div key={interaction.id} className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                        <div>
+                          <p className="font-medium text-blue-900">
+                            {interaction.user_query.substring(0, 80)}
+                            {interaction.user_query.length > 80 ? '...' : ''}
+                          </p>
+                          <p className="text-sm text-blue-700">
+                            Retrieved {interaction.retrieved_chunks?.length || 0} sources
+                            {interaction.response_rating && ` • ${interaction.response_rating}/5 rating`}
+                            {interaction.response_time_ms && ` • ${interaction.response_time_ms}ms`}
+                          </p>
+                        </div>
+                        <div className="text-sm text-blue-600 font-medium">
+                          {new Date(interaction.created_at).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg border border-purple-200">
-                    <div>
-                      <p className="font-medium text-purple-900">Defense tech investment landscape</p>
-                      <p className="text-sm text-purple-700">Retrieved 5 relevant sources, 4.9/5 rating • Voice input used</p>
-                    </div>
-                    <div className="text-sm text-purple-600 font-medium">12 min ago</div>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -275,51 +300,29 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-gray-600 mb-6">Comprehensive testing suite for production environment</p>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="p-6 border border-blue-200 rounded-lg bg-blue-50">
-                    <h4 className="font-semibold mb-3 text-blue-900">Founder Scenarios</h4>
-                    <p className="text-sm text-blue-700 mb-4">Test AI responses to typical founder inquiries across funding stages</p>
+                    <h4 className="font-semibold mb-3 text-blue-900">Avatar Voice Testing</h4>
+                    <p className="text-sm text-blue-700 mb-4">Test complete voice conversation flow with AI Avatar</p>
                     <div className="space-y-2 mb-4">
-                      <div className="text-xs text-blue-600">✓ Seed fundraising questions</div>
-                      <div className="text-xs text-blue-600">✓ Product-market fit guidance</div>
-                      <div className="text-xs text-blue-600">✓ Team building advice</div>
+                      <div className="text-xs text-blue-600">✓ Speech-to-text accuracy</div>
+                      <div className="text-xs text-blue-600">✓ RAG context retrieval</div>
+                      <div className="text-xs text-blue-600">✓ Text-to-speech output</div>
+                      <div className="text-xs text-blue-600">✓ Continuous conversation</div>
                     </div>
                     <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                      Run Founder Tests
+                      Test Avatar Voice Mode
                     </Button>
                   </div>
                   <div className="p-6 border border-green-200 rounded-lg bg-green-50">
-                    <h4 className="font-semibold mb-3 text-green-900">Investor Scenarios</h4>
-                    <p className="text-sm text-green-700 mb-4">Test responses to investor-focused queries and due diligence</p>
+                    <h4 className="font-semibold mb-3 text-green-900">Content Integration</h4>
+                    <p className="text-sm text-green-700 mb-4">Verify uploaded content affects Avatar responses</p>
                     <div className="space-y-2 mb-4">
-                      <div className="text-xs text-green-600">✓ Market analysis questions</div>
-                      <div className="text-xs text-green-600">✓ Financial projections</div>
-                      <div className="text-xs text-green-600">✓ Competition landscape</div>
+                      <div className="text-xs text-green-600">✓ Content processing pipeline</div>
+                      <div className="text-xs text-green-600">✓ Vector embedding quality</div>
+                      <div className="text-xs text-green-600">✓ Context retrieval accuracy</div>
+                      <div className="text-xs text-green-600">✓ Response relevance</div>
                     </div>
                     <Button className="w-full bg-green-600 hover:bg-green-700">
-                      Run Investor Tests
-                    </Button>
-                  </div>
-                  <div className="p-6 border border-purple-200 rounded-lg bg-purple-50">
-                    <h4 className="font-semibold mb-3 text-purple-900">Voice System Tests</h4>
-                    <p className="text-sm text-purple-700 mb-4">Comprehensive voice input/output quality assurance</p>
-                    <div className="space-y-2 mb-4">
-                      <div className="text-xs text-purple-600">✓ Speech-to-text accuracy</div>
-                      <div className="text-xs text-purple-600">✓ TTS voice quality</div>
-                      <div className="text-xs text-purple-600">✓ Latency measurements</div>
-                    </div>
-                    <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                      Run Voice Tests
-                    </Button>
-                  </div>
-                  <div className="p-6 border border-orange-200 rounded-lg bg-orange-50">
-                    <h4 className="font-semibold mb-3 text-orange-900">Load & Performance</h4>
-                    <p className="text-sm text-orange-700 mb-4">Production load testing and performance monitoring</p>
-                    <div className="space-y-2 mb-4">
-                      <div className="text-xs text-orange-600">✓ Concurrent user handling</div>
-                      <div className="text-xs text-orange-600">✓ API response times</div>
-                      <div className="text-xs text-orange-600">✓ Database performance</div>
-                    </div>
-                    <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                      Run Load Tests
+                      Test Content Pipeline
                     </Button>
                   </div>
                 </div>
@@ -366,35 +369,6 @@ const AdminDashboard: React.FC = () => {
                         <label className="block text-sm font-medium mb-2">TTS Speed</label>
                         <input type="range" min="0.5" max="2.0" step="0.1" defaultValue="1.0" className="w-full" />
                         <p className="text-sm text-gray-600 mt-1">Speech playback speed (1.0 optimal)</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t">
-                    <h4 className="font-semibold text-gray-900 mb-4">Advanced Configuration</h4>
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Max Context Chunks</label>
-                        <select className="w-full p-2 border rounded-lg">
-                          <option value="3">3 chunks</option>
-                          <option value="5" selected>5 chunks (Production)</option>
-                          <option value="10">10 chunks</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Session Timeout</label>
-                        <select className="w-full p-2 border rounded-lg">
-                          <option value="1">1 hour</option>
-                          <option value="2" selected>2 hours (Current)</option>
-                          <option value="4">4 hours</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Cache Duration</label>
-                        <select className="w-full p-2 border rounded-lg">
-                          <option value="300">5 minutes</option>
-                          <option value="900" selected>15 minutes (Production)</option>
-                          <option value="1800">30 minutes</option>
-                        </select>
                       </div>
                     </div>
                   </div>

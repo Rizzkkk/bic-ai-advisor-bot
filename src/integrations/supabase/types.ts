@@ -9,7 +9,166 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      avatar_interactions: {
+        Row: {
+          created_at: string
+          feedback_text: string | null
+          generated_response: string
+          id: string
+          relevance_score: number | null
+          response_rating: number | null
+          response_time_ms: number | null
+          retrieved_chunks: string[] | null
+          session_id: string
+          tone_score: number | null
+          user_query: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_text?: string | null
+          generated_response: string
+          id?: string
+          relevance_score?: number | null
+          response_rating?: number | null
+          response_time_ms?: number | null
+          retrieved_chunks?: string[] | null
+          session_id: string
+          tone_score?: number | null
+          user_query: string
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string | null
+          generated_response?: string
+          id?: string
+          relevance_score?: number | null
+          response_rating?: number | null
+          response_time_ms?: number | null
+          retrieved_chunks?: string[] | null
+          session_id?: string
+          tone_score?: number | null
+          user_query?: string
+        }
+        Relationships: []
+      }
+      content_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          domain: string
+          embedding: string | null
+          id: string
+          metadata: Json | null
+          source_id: string
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          domain: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id: string
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          domain?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_chunks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "content_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_sources: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          name: string
+          raw_content: string | null
+          source_url: string | null
+          status: string
+          type: string
+          upload_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          name: string
+          raw_content?: string | null
+          source_url?: string | null
+          status?: string
+          type: string
+          upload_date?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          name?: string
+          raw_content?: string | null
+          source_url?: string | null
+          status?: string
+          type?: string
+          upload_date?: string
+        }
+        Relationships: []
+      }
+      processing_logs: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          processing_time_ms: number | null
+          source_id: string
+          stage: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          processing_time_ms?: number | null
+          source_id: string
+          stage: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          processing_time_ms?: number | null
+          source_id?: string
+          stage?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_logs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "content_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
