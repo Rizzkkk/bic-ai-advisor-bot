@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { OpenAIService, createSystemPrompt, type ChatMessage } from '@/utils/openaiService';
 import ChatBubble from './components/chat/ChatBubble';
 import ChatWindow from './components/chat/ChatWindow';
-import AvatarChat from './components/avatar/AvatarChat';
+import { AvatarChat } from './components/avatar';
 import { Message, BICChatbotProps } from './components/chat/types';
 
 const ChatApplication: React.FC<BICChatbotProps> = () => {
